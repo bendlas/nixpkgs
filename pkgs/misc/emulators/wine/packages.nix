@@ -5,7 +5,8 @@
 let sources = with lib.getAttr wineRelease (import ./versions.nix); {
       version = wineVersion;
       src = fetchurl {
-        url = "mirror://sourceforge/wine/wine-${wineVersion}.tar.bz2";
+        url = "http://mirrors.ibiblio.org/wine/source/1.7/wine-1.7.48.tar.bz2";
+        #        "mirror://sourceforge/wine/wine-${wineVersion}.tar.bz2";
         sha256 = wineSha256;
       };
 
