@@ -12409,6 +12409,7 @@ let
   eiskaltdcpp = callPackage ../applications/networking/p2p/eiskaltdcpp { lua5 = lua5_1; };
 
   qemu = callPackage ../applications/virtualization/qemu { };
+  qemu-binfmt = callPackage ../applications/virtualization/qemu/binfmt-conf.nix { };
 
   qjackctl = callPackage ../applications/audio/qjackctl { };
 

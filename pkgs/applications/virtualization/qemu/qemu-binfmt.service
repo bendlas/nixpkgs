@@ -1,0 +1,8 @@
+[Unit]
+Description=Manager of qemu binfmt registrations
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=@scripts@/bin/enable-qemu-binfmt
+ExecStop=@scripts@/bin/disable-qemu-binfmt
