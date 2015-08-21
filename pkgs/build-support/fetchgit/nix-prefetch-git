@@ -224,13 +224,19 @@ make_deterministic_repo(){
         fi
     done
 
-    # Do a full repack. Must run single-threaded, or else we lose determinism.
-    git config pack.threads 1
+    # Do a full repack. Can run multi-threaded, since we unpack in the last step
     git repack -A -d -f
-    rm -f .git/config
 
     # Garbage collect unreferenced objects.
     git gc --prune=all
+
+    mv .git/objects .git/objects.tmp
+    mkdir .git/objects
+
+    # Unpack everything uncompressed
+    git config core.compression 0
+    find .git/objects.tmp/pack -name "*.pack" -exec sh -c "git unpack-objects < {}" \;
+    rm -rf .git/config .git/objects.tmp
     )
 }
 
