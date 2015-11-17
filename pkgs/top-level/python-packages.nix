@@ -9400,10 +9400,10 @@ in modules // {
   };
 
   epc = buildPythonPackage rec {
-    name = "epc-0.0.3";
+    name = "epc-0.0.5";
     src = pkgs.fetchurl {
       url = "mirror://pypi/e/epc/${name}.tar.gz";
-      sha256 = "30b594bd4a4acbd5bda0d3fa3d25b4e8117f2ff8f24d2d1e3e36c90374f3c55e";
+      md5 = "de54a24ace8a9b3f5b2d8f014b8c4a42";
     };
 
     propagatedBuildInputs = with self; [ sexpdata ];
