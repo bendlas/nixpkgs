@@ -10075,6 +10075,8 @@ in
 
   pfixtools = callPackage ../servers/mail/postfix/pfixtools.nix { };
 
+  postgrey = callPackage ../servers/mail/postgrey { };
+
   pshs = callPackage ../servers/http/pshs { };
 
   libpulseaudio = callPackage ../servers/pulseaudio { libOnly = true; };
