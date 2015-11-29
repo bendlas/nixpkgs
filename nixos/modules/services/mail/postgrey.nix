@@ -56,9 +56,14 @@ in {
       description = "Postfix Greylisting Service";
       wantedBy = [ "multi-user.target" ];
       before = [ "postfix.service" ];
+      preStart = ''
+        mkdir -p /var/postgrey
+        chown postgrey:postgrey /var/postgrey
+        chmod 0770 /var/postgrey
+      '';
       serviceConfig = {
         Type = "simple";
-        ExecStart = ''${pkgs.postgrey}/bin/postgrey ${bind-flag} --pidfile=/var/run/postgrey.pid --group=postgrey --user=postgrey --greylist-text="${cfg.greylistText}"'';
+        ExecStart = ''${pkgs.postgrey}/bin/postgrey ${bind-flag} --pidfile=/var/run/postgrey.pid --group=postgrey --user=postgrey --dbdir=/var/postgrey --greylist-text="${cfg.greylistText}"'';
         Restart = "always";
         RestartSec = 5;
         TimeoutSec = 10;
