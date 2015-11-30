@@ -1,34 +1,70 @@
-{ stdenv, makeWrapper, writeScriptBin, callPackage, libffi, libedit, libuv, boost, variant ? "jit" }:
+{ stdenv, fetchgit, python, makeWrapper, pkgconfig, gcc,
+  pypy, libffi, libedit, libuv, boost,
+  variant ? "jit" }:
 
 let
-  pixie-build = callPackage ./build.nix { inherit variant; };
-
-  libs = pixie-build.nativeBuildInputs; #[ libffi libedit libuv boost ];
-
-  C_INCLUDE_PATH = stdenv.lib.concatStringsSep ":"
-                     (map (p: "${p}/include") libs);
-  LIBRARY_PATH = stdenv.lib.concatStringsSep ":"
+  commit-count = "1267";
+  common-flags = "--thread --gcrootfinder=shadowstack --continuation";
+  variants = {
+    jit = { flags = "--opt=jit"; target = "target.py"; };
+    jit-preload = { flags = "--opt=jit"; target = "target_preload.py"; };
+    no-jit = { flags = ""; target = "target.py"; };
+    no-jit-preload = { flags = ""; target = "target_preload.py"; };
+  };
+  pixie-src = fetchgit {
+    url = "https://github.com/pixie-lang/pixie.git";
+    rev = "244188cba48d07dc7ca71907cf7c51c4f3480b25";
+    sha256 = "0vza9wb2al72r5l86c5syrflbcw9pxwdgaclnfjn6qv8xanbixx3";
+  };
+  libs = [ libffi libedit libuv boost.dev boost.lib ];
+  include-path = stdenv.lib.concatStringsSep ":"
+                   (map (p: "${p}/include") libs);
+  library-path = stdenv.lib.concatStringsSep ":"
                    (map (p: "${p}/lib") libs);
-  LD_LIBRARY_PATH = LIBRARY_PATH;
-in stdenv.mkDerivation {
-  name = "pxi-${pixie-build.version}";
-  version = pixie-build.version;
-  buildInputs = [ makeWrapper ];
-  phases = [ "installPhase" ];
-  installPhase = ''
-    mkdir -p $out/bin
-    makeWrapper ${pixie-build}/pixie-vm $out/bin/pxi \
-      --prefix LD_LIBRARY_PATH : ${LD_LIBRARY_PATH} \
-      --prefix C_INCLUDE_PATH : ${C_INCLUDE_PATH} \
-      --prefix LIBRARY_PATH : ${LIBRARY_PATH}
-  '';
-}
-/*
-in writeScriptBin "pxi" ''
-  #!${stdenv.shell}
-  export C_INCLUDE_PATH="${C_INCLUDE_PATH}:$C_INCLUDE_PATH"
-  export LIBRARY_PATH="${LIBRARY_PATH}:$LIBRARY_PATH"
-  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$LD_LIBRARY_PATH"
-  exec ${pixie-build}/pixie-vm $@
-''
-*/
+  bin-path = stdenv.lib.concatStringsSep ":"
+               (map (p: "${p}/bin") [ gcc ]);
+  build = {flags, target}: stdenv.mkDerivation rec {
+    name = "pixie-${version}";
+    version = "0-r${commit-count}-${variant}";
+    nativeBuildInputs = libs;
+    buildInputs = [ pkgconfig makeWrapper ];
+    # PYTHON = "${pypy}/pypy-c/.pypy-c-wrapped";
+    PYTHON = "${python}/bin/python";
+    unpackPhase = ''
+      cp -R ${pixie-src} pixie-src
+      mkdir pypy-src
+      (cd pypy-src
+       tar --strip-components=1 -xjf ${pypy.src})
+      chmod -R +w pypy-src pixie-src
+    '';
+    patchPhase = ''
+      (cd pixie-src
+       patch -p1 < ${./load_paths.patch}
+       libuv="${libuv}"
+       libedit="${libedit}"
+       libffi="${libffi}"
+       boostDev="${boost.dev}"
+       boostLib="${boost.lib}"
+       export libuv libedit libffi boostDev boostLib
+       substituteAllInPlace ./pixie/ffi-infer.pxi)
+    '';
+    buildPhase = ''(
+      PYTHONPATH="`pwd`/pypy-src:$PYTHONPATH";
+      RPYTHON="`pwd`/pypy-src/rpython/bin/rpython";
+      cd pixie-src
+      $PYTHON $RPYTHON ${common-flags} ${target} >&1
+    )'';
+    installPhase = ''
+      mkdir -p $out/share $out/bin
+      cp pixie-src/pixie-vm $out/share/pixie-vm
+      cp -R pixie-src/pixie $out/share/pixie
+      makeWrapper $out/share/pixie-vm $out/bin/pxi \
+        --prefix LD_LIBRARY_PATH : ${library-path} \
+        --prefix C_INCLUDE_PATH : ${include-path} \
+        --prefix LIBRARY_PATH : ${library-path} \
+        --prefix PATH : ${bin-path}
+      cd $out/share
+    '';
+    # $out/bin/pxi -c pixie/uv.pxi -c pixie/io.pxi -c pixie/stacklets.pxi -c pixie/stdlib.pxi -c pixie/repl.pxi
+  };
+in build (builtins.getAttr variant variants)

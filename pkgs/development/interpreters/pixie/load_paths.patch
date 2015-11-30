@@ -1,0 +1,29 @@
+diff --git a/pixie/ffi-infer.pxi b/pixie/ffi-infer.pxi
+index 9f13ac7..8504d7c 100644
+--- a/pixie/ffi-infer.pxi
++++ b/pixie/ffi-infer.pxi
+@@ -1,15 +1,15 @@
+ (ns pixie.ffi-infer
+   (:require [pixie.io-blocking :as io]))
+ 
+-
+-(defn -add-rel-path [rel]
+-  (swap! load-paths conj (str (first @load-paths) "/" rel)))
+-
+-(-add-rel-path "lib")
+-(-add-rel-path "include")
+-(-add-rel-path "../lib")
+-(-add-rel-path "../include")
+-
++(defn -add-library-path [p]
++  (swap! load-paths conj (str p "/include"))
++  (swap! load-paths conj (str p "/lib")))
++
++(-add-library-path "@libuv@")
++(-add-library-path "@libedit@")
++(-add-library-path "@boostDev@")
++(-add-library-path "@boostLib@")
++(-add-library-path "@libffi@")
+ 
+ (def *config* nil)
+ (set-dynamic! (var *config*))
