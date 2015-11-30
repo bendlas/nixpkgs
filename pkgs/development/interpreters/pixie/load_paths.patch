@@ -1,12 +1,15 @@
 diff --git a/pixie/ffi-infer.pxi b/pixie/ffi-infer.pxi
-index 9f13ac7..8504d7c 100644
+index 9f13ac7..74301c2 100644
 --- a/pixie/ffi-infer.pxi
 +++ b/pixie/ffi-infer.pxi
-@@ -1,15 +1,15 @@
+@@ -1,15 +1,16 @@
  (ns pixie.ffi-infer
    (:require [pixie.io-blocking :as io]))
  
--
++(defn -add-library-path [p]
++  (swap! load-paths conj (str p "/include"))
++  (swap! load-paths conj (str p "/lib")))
+ 
 -(defn -add-rel-path [rel]
 -  (swap! load-paths conj (str (first @load-paths) "/" rel)))
 -
@@ -15,15 +18,64 @@ index 9f13ac7..8504d7c 100644
 -(-add-rel-path "../lib")
 -(-add-rel-path "../include")
 -
-+(defn -add-library-path [p]
-+  (swap! load-paths conj (str p "/include"))
-+  (swap! load-paths conj (str p "/lib")))
-+
 +(-add-library-path "@libuv@")
 +(-add-library-path "@libedit@")
 +(-add-library-path "@boostDev@")
 +(-add-library-path "@boostLib@")
 +(-add-library-path "@libffi@")
++(-add-library-path "@zlib@")
  
  (def *config* nil)
  (set-dynamic! (var *config*))
+@@ -178,24 +179,35 @@ return 0;
+   `(def ~(symbol name)
+      ~(callback-type of-type false)))
+ 
++(def mkdtemp (ffi-fn libc "mkdtemp" [CCharP] CCharP))
++(def unlink (ffi-fn libc "unlink" [CCharP] CInt))
++(def rmdir (ffi-fn libc "rmdir" [CCharP] CInt))
++(def tempdir-template (str (or (getenv "TMPDIR") "/tmp")
++                           "/ffiXXXXXX"))
+ 
+ (defn run-infer [config cmds]
+-  (io/spit "/tmp/tmp.cpp" (str (start-string)
+-                               (apply str (map emit-infer-code
+-                                               cmds))
+-                               (end-string)))
+-  (println @load-paths)
+-  (let [cmd-str (str "c++ "
+-                     (apply str (interpose " " pixie.platform/c-flags))
+-                     "  /tmp/tmp.cpp "
+-                     (apply str (map (fn [x] ( str " -I " x " "))
+-                                     @load-paths))
+-                     (apply str " " (interpose " " (:cxx-flags *config*)))
+-                     " -o /tmp/a.out && /tmp/a.out")
+-        _ (println cmd-str)
+-        result (read-string (io/run-command cmd-str))
+-        gen (vec (map generate-code cmds result))]
+-    `(do ~@gen)))
++  (let [tempdir (mkdtemp tempdir-template)
++        infile (str tempdir "/ffi.cpp")
++        outfile (str tempdir "/ffi.out")]
++    (io/spit infile (str (start-string)
++                         (apply str (map emit-infer-code
++                                         cmds))
++                         (end-string)))
++    (println @load-paths)
++    (let [cmd-str (str "c++ "
++                       (apply str (interpose " " pixie.platform/c-flags))
++                       " " infile " "
++                       (apply str (map (fn [x] ( str " -I " x " "))
++                                       @load-paths))
++                       (apply str " " (interpose " " (:cxx-flags *config*)))
++                       " -o " outfile " && " outfile)
++          _ (println cmd-str)
++          result (read-string (io/run-command cmd-str))
++          gen (vec (map generate-code cmds result))]
++      (unlink infile)
++      (unlink outfile)
++      (rmdir tempdir)
++      `(do ~@gen))))
+ 
+ (defn full-lib-name [library-name]
+   (if (= library-name "c")

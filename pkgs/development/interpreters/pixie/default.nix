@@ -1,5 +1,5 @@
 { stdenv, fetchgit, python, makeWrapper, pkgconfig, gcc,
-  pypy, libffi, libedit, libuv, boost,
+  pypy, libffi, libedit, libuv, boost, zlib,
   variant ? "jit" }:
 
 let
@@ -16,7 +16,7 @@ let
     rev = "244188cba48d07dc7ca71907cf7c51c4f3480b25";
     sha256 = "0vza9wb2al72r5l86c5syrflbcw9pxwdgaclnfjn6qv8xanbixx3";
   };
-  libs = [ libffi libedit libuv boost.dev boost.lib ];
+  libs = [ libffi libedit libuv boost.dev boost.lib zlib ];
   include-path = stdenv.lib.concatStringsSep ":"
                    (map (p: "${p}/include") libs);
   library-path = stdenv.lib.concatStringsSep ":"
@@ -28,8 +28,7 @@ let
     version = "0-r${commit-count}-${variant}";
     nativeBuildInputs = libs;
     buildInputs = [ pkgconfig makeWrapper ];
-    # PYTHON = "${pypy}/pypy-c/.pypy-c-wrapped";
-    PYTHON = "${python}/bin/python";
+    PYTHON = "${pypy}/pypy-c/.pypy-c-wrapped";
     unpackPhase = ''
       cp -R ${pixie-src} pixie-src
       mkdir pypy-src
@@ -45,14 +44,17 @@ let
        libffi="${libffi}"
        boostDev="${boost.dev}"
        boostLib="${boost.lib}"
-       export libuv libedit libffi boostDev boostLib
+       zlib="${zlib}"
+       export libuv libedit libffi boostDev boostLib zlib
        substituteAllInPlace ./pixie/ffi-infer.pxi)
     '';
     buildPhase = ''(
       PYTHONPATH="`pwd`/pypy-src:$PYTHONPATH";
       RPYTHON="`pwd`/pypy-src/rpython/bin/rpython";
       cd pixie-src
-      $PYTHON $RPYTHON ${common-flags} ${target} >&1
+      $PYTHON $RPYTHON ${common-flags} ${target}
+      export LD_LIBRARY_PATH="${library-path}:$LD_LIBRARY_PATH"
+      find pixie -name "*.pxi" -exec ./pixie-vm -c {} \;
     )'';
     installPhase = ''
       mkdir -p $out/share $out/bin
@@ -63,8 +65,6 @@ let
         --prefix C_INCLUDE_PATH : ${include-path} \
         --prefix LIBRARY_PATH : ${library-path} \
         --prefix PATH : ${bin-path}
-      cd $out/share
     '';
-    # $out/bin/pxi -c pixie/uv.pxi -c pixie/io.pxi -c pixie/stacklets.pxi -c pixie/stdlib.pxi -c pixie/repl.pxi
   };
 in build (builtins.getAttr variant variants)
