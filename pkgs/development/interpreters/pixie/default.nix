@@ -1,9 +1,9 @@
 { stdenv, fetchgit, python, makeWrapper, pkgconfig, gcc,
   pypy, libffi, libedit, libuv, boost, zlib,
-  variant ? "jit" }:
+  variant ? "jit", buildWithPypy ? false }:
 
 let
-  commit-count = "1267";
+  commit-count = "1269";
   common-flags = "--thread --gcrootfinder=shadowstack --continuation";
   variants = {
     jit = { flags = "--opt=jit"; target = "target.py"; };
@@ -13,8 +13,8 @@ let
   };
   pixie-src = fetchgit {
     url = "https://github.com/pixie-lang/pixie.git";
-    rev = "244188cba48d07dc7ca71907cf7c51c4f3480b25";
-    sha256 = "0vza9wb2al72r5l86c5syrflbcw9pxwdgaclnfjn6qv8xanbixx3";
+    rev = "974f85d20dc5244e5372d4a8d6ae8217571174d7";
+    sha256 = "0jl32753b00qc571505m3glgjysdwp19d37rb12drx6qk8rajg4y";
   };
   libs = [ libffi libedit libuv boost.dev boost.lib zlib ];
   include-path = stdenv.lib.concatStringsSep ":"
@@ -28,7 +28,9 @@ let
     version = "0-r${commit-count}-${variant}";
     nativeBuildInputs = libs;
     buildInputs = [ pkgconfig makeWrapper ];
-    PYTHON = "${pypy}/pypy-c/.pypy-c-wrapped";
+    PYTHON = if buildWithPypy
+      then "${pypy}/pypy-c/.pypy-c-wrapped"
+      else "${python}/bin/python";
     unpackPhase = ''
       cp -R ${pixie-src} pixie-src
       mkdir pypy-src
