@@ -5481,6 +5481,10 @@ in
 
   clooj = callPackage ../development/interpreters/clojure/clooj.nix { };
 
+  clasp = callPackage ../development/compilers/clasp {
+    llvm = llvm_36; clang = clang_36; gmp = gmp6; readline = readline62;
+  };
+
   erlangR16 = callPackage ../development/interpreters/erlang/R16.nix { };
   erlangR16_odbc = callPackage ../development/interpreters/erlang/R16.nix { odbcSupport = true; };
   erlangR17 = callPackage ../development/interpreters/erlang/R17.nix {
