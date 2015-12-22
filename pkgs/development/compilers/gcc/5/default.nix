@@ -6,6 +6,7 @@
 , langAda ? false
 , langVhdl ? false
 , langGo ? false
+, langJit ? false
 , profiledCompiler ? false
 , staticCompiler ? false
 , enableShared ? true
@@ -359,6 +360,7 @@ stdenv.mkDerivation ({
         ++ optional langObjC     "objc"
         ++ optional langObjCpp   "obj-c++"
         ++ optionals crossDarwin [ "objc" "obj-c++" ]
+        ++ optional langJit      "jit"
         )
       )
     }
@@ -370,6 +372,7 @@ stdenv.mkDerivation ({
     ${if cross != null then crossConfigureFlags else ""}
     ${if !bootstrap then "--disable-bootstrap" else ""}
     ${if cross == null then platformFlags else ""}
+    ${if langJit then "--enable-host-shared" else ""}
   ";
 
   targetConfig = if cross != null then cross.config else null;
