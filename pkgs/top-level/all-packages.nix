@@ -10321,6 +10321,8 @@ in
 
   gn = callPackage ../development/tools/build-managers/gn { };
 
+  depot_tools = callPackage ../development/tools/build-managers/depot-tools { };
+
   nixbang = callPackage ../development/tools/misc/nixbang {
     pythonPackages = python3Packages;
   };
