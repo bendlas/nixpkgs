@@ -211,6 +211,9 @@ stdenv.mkDerivation ({
 
   builder = ../builder.sh;
 
+  outputs = if langJit then [ "out" "info" "libgccjit" ]
+                       else [ "out" "info" ];
+
   src = fetchurl {
     url = "mirror://gnu/gcc/gcc-${version}/gcc-${version}.tar.bz2";
     sha256 = "1ny4smkp5bzs3cp8ss7pl6lk8yss0d9m4av1mvdp72r1x695akxq";
@@ -385,6 +388,13 @@ stdenv.mkDerivation ({
     if stripped
     then "install-strip"
     else "install";
+
+  # move libgccjit into sepearate output
+  postInstall = stdenv.lib.optionalString (langJit) ''
+    mkdir -p $libgccjit/include $libgccjit/lib
+    mv $out/include/libgccjit* $libgccjit/include/
+    mv $out/lib/libgccjit* $libgccjit/lib/
+  '';
 
   crossAttrs = let
     xgccArch = stdenv.cross.gcc.arch or null;
