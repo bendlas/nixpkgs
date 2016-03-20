@@ -7237,6 +7237,8 @@ in
 
   gstreamermm = callPackage ../development/libraries/gstreamer/legacy/gstreamermm { };
 
+  openwebrtc = callPackage ../development/libraries/open-webrtc { };
+
   gnonlin = callPackage ../development/libraries/gstreamer/legacy/gnonlin {};
 
   gusb = callPackage ../development/libraries/gusb {
