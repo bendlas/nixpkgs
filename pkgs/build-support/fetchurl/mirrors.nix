@@ -352,4 +352,10 @@ rec {
     https://archive.mozilla.org/pub/
   ];
 
+  # Well known maven repositories
+  maven = [
+    http://repo1.maven.org/maven2/
+    https://clojars.org/repo/
+  ];
+
 }
