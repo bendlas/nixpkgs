@@ -1,0 +1,48 @@
+From a43105e1cf7330c9adf9495c8b4d4332d5f25908 Mon Sep 17 00:00:00 2001
+From: Herwig Hochleitner <herwig@bendlas.net>
+Date: Mon, 16 May 2016 02:05:55 +0200
+Subject: [PATCH] nix: path configuration
+
+---
+ res/miracle-gst.sh | 2 +-
+ src/dhcp/dhcp.c    | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/res/miracle-gst.sh b/res/miracle-gst.sh
+index 99749d5..280594c 100755
+--- a/res/miracle-gst.sh
++++ b/res/miracle-gst.sh
+@@ -31,7 +31,7 @@ while getopts "r:d:as:" optname
+     esac
+   done
+ 
+-RUN="/usr/bin/gst-launch-1.0 -v "
++RUN="@GST_LAUNCH@ -v "
+ if [ $DEBUG != '0' ]
+ then
+   RUN+="--gst-debug=${DEBUG} "
+diff --git a/src/dhcp/dhcp.c b/src/dhcp/dhcp.c
+index 5457764..d049d81 100644
+--- a/src/dhcp/dhcp.c
++++ b/src/dhcp/dhcp.c
+@@ -68,7 +68,7 @@
+ #include "config.h"
+ 
+ static const char *arg_netdev;
+-static const char *arg_ip_binary = "/bin/ip";
++static const char *arg_ip_binary = "@IP@";
+ static bool arg_server;
+ static char arg_local[INET_ADDRSTRLEN];
+ static char arg_gateway[INET_ADDRSTRLEN];
+@@ -749,7 +749,7 @@ static int help(void)
+ 	       "     --log-time             Prefix log-messages with timestamp\n"
+ 	       "\n"
+ 	       "     --netdev <dev>         Network device to run on\n"
+-	       "     --ip-binary <path>     Path to 'ip' binary [default: /bin/ip]\n"
++	       "     --ip-binary <path>     Path to 'ip' binary [default: @IP@]\n"
+ 	       "     --comm-fd <int>        Comm-socket FD passed through execve()\n"
+ 	       "\n"
+ 	       "Server Options:\n"
+-- 
+2.8.0
+
