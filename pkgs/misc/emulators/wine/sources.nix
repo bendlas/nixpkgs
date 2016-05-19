@@ -55,8 +55,8 @@ in rec {
   };
 
   winetricks = fetchFromGitHub rec {
-    version = "20160219";
-    sha256 = "1wqsbdh2qa5xxswilniki9wzbhlmkl6jqmryjd9f5smirr7ryy2r";
+    version = "20160425";
+    sha256 = "1q5mpfxf3qvj96y71cmpkh6ssy41bq9qn31jbizcysj901sqyd6v";
     owner = "Winetricks";
     repo = "winetricks";
     rev = version;
