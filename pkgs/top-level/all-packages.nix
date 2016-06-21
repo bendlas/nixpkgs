@@ -5753,6 +5753,7 @@ in
     wrapPython = pythonPackages.wrapPython;
   };
 
+  pixie-lang = callPackage ../development/interpreters/pixie-lang { };
   pixie = callPackage ../development/interpreters/pixie { };
   dust = callPackage ../development/interpreters/pixie/dust.nix { };
 
