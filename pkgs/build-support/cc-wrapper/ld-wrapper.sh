@@ -14,9 +14,27 @@ fi
 
 source @out@/nix-support/utils.sh
 
+# Expand @command-files on parameters
+
+readFile() {
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+        echo "$line"
+    done < "$1"
+}
+
+expandParams() {
+    for param in $@; do
+        if [[ "$param" =~ @.* ]]; then
+            readParams=$(readFile "${param:1}")
+            expandParams "${readParams[@]}"
+        else
+            echo "$param"
+        fi
+    done
+}
 
 # Optionally filter out paths not refering to the store.
-params=("$@")
+params=$(expandParams "$@")
 if [ "$NIX_ENFORCE_PURITY" = 1 -a -n "$NIX_STORE" \
         -a \( -z "$NIX_IGNORE_LD_THROUGH_GCC" -o -z "$NIX_LDFLAGS_SET" \) ]; then
     rest=()
