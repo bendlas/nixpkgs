@@ -34,4 +34,6 @@ rec {
 
   stellar-core = callPackage ./stellar-core.nix { };
 
+  zcash = callPackage ./zcash.nix { };
+
 }

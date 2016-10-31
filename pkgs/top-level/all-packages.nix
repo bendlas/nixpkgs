@@ -12731,6 +12731,7 @@ with pkgs;
 
   go-ethereum = self.altcoins.go-ethereum;
   ethabi = self.altcoins.ethabi;
+  zcash = self.altcoins.zcash;
 
   stellar-core = self.altcoins.stellar-core;
 
