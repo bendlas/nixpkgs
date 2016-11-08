@@ -30648,6 +30648,8 @@ in
 
   pwntools = with python3Packages; toPythonApplication pwntools;
 
+  qingy = callPackage ../applications/display-managers/qingy { };
+
   uae = callPackage ../misc/emulators/uae { };
 
   fsuae = callPackage ../misc/emulators/fs-uae { };
