@@ -850,6 +850,7 @@
   ./services/x11/display-managers/startx.nix
   ./services/x11/display-managers/xpra.nix
   ./services/x11/fractalart.nix
+  ./services/x11/display-managers/qingy.nix
   ./services/x11/hardware/libinput.nix
   ./services/x11/hardware/multitouch.nix
   ./services/x11/hardware/synaptics.nix
