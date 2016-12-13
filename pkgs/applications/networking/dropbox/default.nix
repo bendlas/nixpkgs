@@ -26,7 +26,9 @@ let
   version = "21.4.25";
   sha256 =
     {
+      # nix-prefetch-url ../../../../ -A dropbox.src
       "x86_64-linux" = "1pgab1ah6rl30rm4dj0biq5714pfzd5jjd2bp0nmhdqn1hm5vmhv";
+      # nix-prefetch-url ../../../../ -A pkgsi686Linux.dropbox.src
       "i686-linux"   = "05kn8qman8ghknb0chrlmcxrxg7w6l79frkaqj6blgnhanh13h4n";
     }."${stdenv.system}" or (throw "system ${stdenv.system} not supported");
 
