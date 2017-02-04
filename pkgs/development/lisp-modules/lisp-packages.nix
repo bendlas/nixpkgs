@@ -8,12 +8,12 @@ let lispPackages = rec {
 
   cl-ppcre = buildLispPackage rec {
     baseName = "cl-ppcre";
-    version = "2.0.4";
+    version = "2.0.11";
     description = "Regular expression library for Common Lisp";
     deps = [];
     src = pkgs.fetchurl {
       url = "https://github.com/edicl/cl-ppcre/archive/v${version}.tar.gz";
-      sha256 = "16nkfg6j7nn8qkzxn462kqpdlbajpz2p55pdl12sia6yqkj3lh97";
+      sha256 = "1i7daxf0wnydb0pgwiym7qh2wy70n14lxd6dyv28sy0naa8p31gd";
     };
   };
 
@@ -48,13 +48,13 @@ let lispPackages = rec {
 
   alexandria = buildLispPackage rec {
     baseName = "alexandria";
-    version = "git-20131029";
+    version = "git-20161122";
     description = "A collection of portable public domain utilities";
     deps = [];
     src = pkgs.fetchgit {
       url = "https://gitlab.common-lisp.net/alexandria/alexandria.git";
-      sha256 = "1gx642w00cnnkbkcsnzmg1w147r6yvc0ayns7ha4k0qcvfnb1zvs";
-      rev = ''2b1eb4067fb34bc501e527de75d09166a8ba9ceb'';
+      sha256 = "0lvqnilpqpipnwnxrghb2vx877bmr7jsfx6i4grjh1z6zyhsrx3b";
+      rev = "85f82ed88d5fa6e63026038dbb1dad0d6cd5dafe";
     };
   };
 
