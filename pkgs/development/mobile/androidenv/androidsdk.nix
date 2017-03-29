@@ -1,5 +1,5 @@
 { stdenv, stdenv_32bit, fetchurl, unzip, makeWrapper
-, platformTools, buildTools, support, supportRepository, platforms, sysimages, addons, sources
+, platformTools, buildTools, support, platforms, sysimages, addons, sources
 , libX11, libXext, libXrender, libxcb, libXau, libXdmcp, libXtst, mesa, alsaLib
 , freetype, fontconfig, glib, gtk2, atk, file, jdk, coreutils, libpulseaudio, dbus
 , zlib, glxinfo, xkeyboardconfig
@@ -151,7 +151,7 @@ stdenv.mkDerivation rec {
     mkdir -p extras/android
     cd extras/android
 
-    ln -s ${supportRepository}/m2repository
+    ln -s ${addons.android_repository}/m2repository
 
     ${if useExtraSupportLibs then
        "ln -s ${addons.android_support_extra}/support ."
@@ -160,6 +160,8 @@ stdenv.mkDerivation rec {
     cd ..
     mkdir -p google
     cd google
+
+    ln -s ${addons.google_repository}/m2repository
 
     ${if useGooglePlayServices then
        "ln -s ${addons.google_play_services}/google-play-services google_play_services"

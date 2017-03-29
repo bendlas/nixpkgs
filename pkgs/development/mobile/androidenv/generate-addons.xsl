@@ -59,6 +59,19 @@ in
       url = http://developer.android.com/;
     };
   };
+</xsl:for-each><xsl:for-each select="sdk:extra[sdk:path='m2repository']">
+  <xsl:value-of select="sdk:vendor-id" />_repository = buildGoogleApis {
+    name = "<xsl:value-of select="sdk:vendor-id" />_repository";
+    version = "<xsl:value-of select="sdk:revision/sdk:major" />";
+    src = fetchurl {
+      url = https://dl.google.com/android/repository/<xsl:value-of select="sdk:archives/sdk:archive/sdk:url" />;
+      sha1 = "<xsl:value-of select="sdk:archives/sdk:archive/sdk:checksum[@type='sha1']" />";
+    };
+    meta = {
+      description = "Google/Android support m2 repositories";
+      url = http://developer.android.com/;
+    };
+  };
 </xsl:for-each>
 
 <!-- Instant apps -->

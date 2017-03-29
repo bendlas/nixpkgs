@@ -49,9 +49,7 @@ rec {
     inherit (pkgs) stdenv fetchurl unzip makeWrapper;
     inherit (pkgs) zlib glxinfo freetype fontconfig glib gtk2 atk mesa file alsaLib jdk coreutils libpulseaudio dbus;
     inherit (pkgs.xorg) libX11 libXext libXrender libxcb libXau libXdmcp libXtst xkeyboardconfig;
-
-    inherit platformTools buildTools support supportRepository platforms sysimages addons sources includeSources;
-
+    inherit platformTools buildTools support platforms sysimages addons sources includeSources;
     stdenv_32bit = pkgs_i686.stdenv;
   };
 
@@ -172,12 +170,26 @@ rec {
 
   androidsdk_7_0 = androidsdk {
     platformVersions = [ "24" ];
-    abiVersions = [ "x86" "x86_64"];
+    abiVersions = [ "armeabi-v7a" "x86" "x86_64"];
     useGoogleAPIs = true;
   };
 
   androidsdk_7_0_extras = androidsdk {
     platformVersions = [ "24" ];
+    abiVersions = [ "armeabi-v7a" "x86" "x86_64"];
+    useGoogleAPIs = true;
+    useExtraSupportLibs = true;
+    useGooglePlayServices = true;
+  };
+
+  androidsdk_7_1_1 = androidsdk {
+    platformVersions = [ "25" ];
+    abiVersions = [ "x86" "x86_64"];
+    useGoogleAPIs = true;
+  };
+
+  androidsdk_7_1_1_extras = androidsdk {
+    platformVersions = [ "25" ];
     abiVersions = [ "x86" "x86_64"];
     useGoogleAPIs = true;
     useExtraSupportLibs = true;
