@@ -5420,6 +5420,8 @@ in
 
   gzrt = callPackage ../tools/compression/gzrt { };
 
+  hackintosh = callPackage ../build-support/hackintosh.nix { };
+
   httplab = callPackage ../tools/networking/httplab { };
 
   lucky-cli = callPackage ../development/web/lucky-cli { };
