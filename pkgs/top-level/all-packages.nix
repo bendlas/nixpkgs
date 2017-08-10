@@ -3238,6 +3238,8 @@ in
 
   gzrt = callPackage ../tools/compression/gzrt { };
 
+  hackintosh = callPackage ../build-support/hackintosh.nix { };
+
   httplab = callPackage ../tools/networking/httplab { };
 
   partclone = callPackage ../tools/backup/partclone { };
