@@ -1,0 +1,11 @@
+#!/bin/sh
+
+READLINK="$(nix-build --no-out-link '<nixpkgs>' -A coreutils)/bin/readlink"
+## http://stackoverflow.com/a/24114056/278651
+SELFDIR="$(dirname -- "$($READLINK -e -- "$BASH_SOURCE")")"
+
+exec nixos-rebuild \
+  -I "nixpkgs=$SELFDIR" \
+  -I "nixos=$SELFDIR/nixos" \
+  -I "nixos-config=$SELFDIR/../bendlas-nixos-config/test-config.nix" \
+  --show-trace "$@" 2>&1
