@@ -33,3 +33,7 @@ update-git-commits.txt
 
 # JetBrains IDEA module declaration file
 /nixpkgs.iml
+
+/build.log
+/rebuild.log
+/prebuild.log
