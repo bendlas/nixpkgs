@@ -1304,6 +1304,7 @@ in {
   certvalidator = callPackage ../development/python-modules/certvalidator { };
 
   cffi = callPackage ../development/python-modules/cffi { };
+  cffi_1_10 = callPackage ../development/python-modules/cffi/1.10.nix { };
 
   cfgv = callPackage ../development/python-modules/cfgv { };
 
