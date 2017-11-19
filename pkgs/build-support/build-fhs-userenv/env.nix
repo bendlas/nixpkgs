@@ -66,6 +66,13 @@ let
     ${profile}
   '';
 
+  lsbRelease = writeText "lsb-release" ''
+    DISTRIB_ID=NixOS
+    DISTRIB_RELEASE=18.03
+    DISTRIB_CODENAME=Impala
+    DISTRIB_DESCRIPTION="Nixos 18.03pre-git (Impala)"
+  '';
+
   # Compose /etc for the chroot environment
   etcPkg = stdenv.mkDerivation {
     name         = "${name}-chrootenv-etc";
@@ -95,6 +102,7 @@ let
       # symlink other core stuff
       ln -s /host/etc/localtime localtime
       ln -s /host/etc/zoneinfo zoneinfo
+      ln -s ${lsbRelease} lsb-release
       ln -s /host/etc/machine-id machine-id
       ln -s /host/etc/os-release os-release
 
