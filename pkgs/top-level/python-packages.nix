@@ -1597,6 +1597,7 @@ in {
   bcrypt = callPackage ../development/python-modules/bcrypt { };
 
   cffi = callPackage ../development/python-modules/cffi { };
+  cffi_1_10 = callPackage ../development/python-modules/cffi/1.10.nix { };
 
   pyavm = callPackage ../development/python-modules/pyavm { };
 
