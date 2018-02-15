@@ -17474,6 +17474,7 @@ in
   libbitcoin-network  = callPackage ../tools/misc/libbitcoin/libbitcoin-network.nix { };
   libbitcoin-explorer = callPackage ../tools/misc/libbitcoin/libbitcoin-explorer.nix { };
 
+  zcashNh = self.altcoins.zcashNh;
 
   aumix = callPackage ../applications/audio/aumix {
     gtkGUI = false;
