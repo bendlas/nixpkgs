@@ -17200,6 +17200,9 @@ in
 
   stellar-core = res.altcoins.stellar-core;
 
+  zcash = self.altcoins.zcash;
+  zcashNh = self.altcoins.zcashNh;
+
   particl-core = res.altcoins.particl-core;
 
   aumix = callPackage ../applications/audio/aumix {
