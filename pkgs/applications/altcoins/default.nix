@@ -93,6 +93,8 @@ rec {
     openssl = openssl_1_1;
   };
 
+  zcashNh = callPackage ./zcash-nh.nix { };
+
   parity = callPackage ./parity { };
   parity-beta = callPackage ./parity/beta.nix { };
   parity-ui = callPackage ./parity-ui { };
