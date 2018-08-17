@@ -11725,6 +11725,7 @@ in
   libuchardet = callPackage ../development/libraries/libuchardet { };
 
   libchop = callPackage ../development/libraries/libchop { };
+  libchop-github = callPackage ../development/libraries/libchop/github.nix { };
 
   libclc = callPackage ../development/libraries/libclc { };
 
