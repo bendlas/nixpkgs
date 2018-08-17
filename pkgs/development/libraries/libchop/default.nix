@@ -1,6 +1,6 @@
-{ fetchurl, stdenv, zlib, bzip2, libgcrypt
-, gdbm, gperf, tdb, gnutls, db, libuuid
-, lzo, pkgconfig, guile
+{ fetchurl, fetchpatch, stdenv, zlib, bzip2, libgcrypt
+, gdbm, gperf, tdb, gnutls, db4, libuuid
+, lzo, pkgconfig, guile_2_0, avahi, gnulib, autoconf, automake
 }:
 
 stdenv.mkDerivation rec {
@@ -11,23 +11,34 @@ stdenv.mkDerivation rec {
     sha256 = "0fpdyxww41ba52d98blvnf543xvirq1v9xz1i3x1gm9lzlzpmc2g";
   };
 
-  patches = [ ./gets-undeclared.patch ./size_t.patch ];
+  patches = [
+    ./gets-undeclared.patch ./size_t.patch
+    (fetchpatch {
+      url = https://github.com/rootfs/libchop/commit/25750ab5ef82fd3cfce5205d5f1ef07b47098091.patch;
+      sha256 = "1njciq5b2bxc8y0ggck6mcznz6vkzii3h0qaafzah7z19y0z8vjn";
+    })
+  ];
 
-  nativeBuildInputs = [ pkgconfig gperf ];
+  nativeBuildInputs = [ pkgconfig gperf gnulib autoconf automake ];
 
   buildInputs =
     [ zlib bzip2 lzo
       libgcrypt
-      gdbm db tdb
+      gdbm db4 tdb
       gnutls libuuid
-      guile
+      guile_2_0 avahi
     ];
 
   doCheck = false;
 
-  preConfigure = ''
-    sed -re 's%@GUILE@%&/guile%' -i */Makefile.* Makefile.*
-  '';
+  # preConfigure = ''
+  #   sed -re 's%@GUILE@%&/guile%' -i */Makefile.* Makefile.*
+  # '';
+
+  # postInstall = ''
+  #   cp utils/chop-backup $out/bin
+  #   cp utils/chop-file $out/bin
+  # '';
 
   meta = with stdenv.lib; {
     description = "Tools & library for data backup and distributed storage";
