@@ -7671,6 +7671,19 @@ in
   gcc-arm-embedded-8 = callPackage ../development/compilers/gcc-arm-embedded/8 {};
   gcc-arm-embedded = gcc-arm-embedded-8;
 
+  libgccjit = callPackage ../development/compilers/gcc/8 {
+    inherit noSysDirs;
+    # PGO seems to speed up compilation by gcc by ~10%, see #445 discussion
+    profiledCompiler = false; # with stdenv; (!isDarwin && (isi686 || isx86_64));
+    libcCross = if stdenv.targetPlatform != stdenv.buildPlatform then libcCross else null;
+    isl = isl_0_17;
+
+    langC = false;
+    langCC = false;
+    langJit = true;
+
+  };
+
   gforth = callPackage ../development/compilers/gforth {};
 
   gtk-server = callPackage ../development/interpreters/gtk-server {};
