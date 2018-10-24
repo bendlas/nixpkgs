@@ -7085,6 +7085,13 @@ in
   gcc-arm-embedded-8 = callPackage ../development/compilers/gcc-arm-embedded/8 {};
   gcc-arm-embedded = gcc-arm-embedded-8;
 
+  libgccjit = callPackage ../development/compilers/gcc/8 {
+    inherit noSysDirs;
+    langC = false;
+    langCC = false;
+    langJit = true;
+  };
+
   gforth = callPackage ../development/compilers/gforth {};
 
   gtk-server = callPackage ../development/interpreters/gtk-server {};
