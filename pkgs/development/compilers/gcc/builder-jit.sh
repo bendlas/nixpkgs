@@ -205,32 +205,11 @@ preInstall() {
     if [ -n "$is64bit" -a -z "$enableMultilib" ]; then
         mkdir -p "$out/lib"
         ln -s lib "$out/lib64"
-        mkdir -p "$lib/lib"
-        ln -s lib "$lib/lib64"
     fi
 }
 
 
 postInstall() {
-    # Move runtime libraries to $lib.
-    moveToOutput "lib/lib*.so*" "$lib"
-    moveToOutput "lib/lib*.la"  "$lib"
-    moveToOutput "lib/lib*.dylib" "$lib"
-    moveToOutput "share/gcc-*/python" "$lib"
-
-    for i in "$lib"/lib/*.{la,py}; do
-        substituteInPlace "$i" --replace "$out" "$lib"
-    done
-
-    if [ -n "$enableMultilib" ]; then
-        moveToOutput "lib64/lib*.so*" "$lib"
-        moveToOutput "lib64/lib*.la"  "$lib"
-        moveToOutput "lib64/lib*.dylib" "$lib"
-
-        for i in "$lib"/lib64/*.{la,py}; do
-            substituteInPlace "$i" --replace "$out" "$lib"
-        done
-    fi
 
     # Remove `fixincl' to prevent a retained dependency on the
     # previous gcc.
@@ -246,23 +225,6 @@ postInstall() {
             PREV_RPATH=`patchelf --print-rpath "$i"`
             NEW_RPATH=`echo "$PREV_RPATH" | sed 's,:[^:]*bootstrap-tools/lib,,g'`
             patchelf --set-rpath "$NEW_RPATH" "$i" && echo OK
-        done
-
-        # For some reason the libs retain RPATH to $out
-        for i in "$lib"/lib/{libtsan,libasan,libubsan}.so.*.*.*; do
-            PREV_RPATH=`patchelf --print-rpath "$i"`
-            NEW_RPATH=`echo "$PREV_RPATH" | sed "s,:${out}[^:]*,,g"`
-            patchelf --set-rpath "$NEW_RPATH" "$i" && echo OK
-        done
-    fi
-
-    if type "install_name_tool"; then
-        for i in "$lib"/lib/*.*.dylib; do
-            install_name_tool -id "$i" "$i" || true
-            for old_path in $(otool -L "$i" | grep "$out" | awk '{print $1}'); do
-              new_path=`echo "$old_path" | sed "s,$out,$lib,"`
-              install_name_tool -change "$old_path" "$new_path" "$i" || true
-            done
         done
     fi
 

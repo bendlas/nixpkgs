@@ -1,8 +1,9 @@
-{ stdenv, targetPackages, fetchurl, noSysDirs
+{ stdenv, lib, targetPackages, fetchurl, noSysDirs
 , langC ? true, langCC ? true, langFortran ? false
 , langObjC ? stdenv.targetPlatform.isDarwin
 , langObjCpp ? stdenv.targetPlatform.isDarwin
 , langGo ? false
+, langJit ? false
 , profiledCompiler ? false
 , staticCompiler ? false
 , enableShared ? true
@@ -137,7 +138,8 @@ stdenv.mkDerivation ({
 
   inherit patches;
 
-  outputs = [ "out" "lib" "man" "info" ];
+  outputs = [ "out" "man" "info" ] ++ lib.optional (! langJit) "lib";
+  lib = if langJit then "out" else "lib";
   setOutputFlags = false;
   NIX_NO_SELF_RPATH = true;
 
@@ -256,6 +258,7 @@ stdenv.mkDerivation ({
           ++ optional langObjC     "objc"
           ++ optional langObjCpp   "obj-c++"
           ++ optionals crossDarwin [ "objc" "obj-c++" ]
+          ++ optional langJit      "jit"
           )
         )
       }"
@@ -271,6 +274,25 @@ stdenv.mkDerivation ({
 
     # Optional features
     optional (isl != null) "--with-isl=${isl}" ++
+
+    optionals langJit [
+      "--enable-shared"
+      "--enable-host-shared"
+      "--enable-linker-build-id"
+      "--enable-linker-hash-style=gnu"
+      "--enable-checking=release"
+      # "--disable-multilib"
+      # "--disable-bootstrap"
+      # "--disable-libssp"
+      # "--disable-lto"
+      # "--disable-libquadmath"
+      # "--disable-liboffloadmic"
+      # "--disable-libada"
+      # "--disable-libsanitizer"
+      # "--disable-libquadmath-support"
+      # "--disable-libgomp"
+      # "--disable-libvtv"
+    ] ++
 
     (import ../common/platform-flags.nix { inherit (stdenv) lib targetPlatform; }) ++
     optional (targetPlatform != hostPlatform) crossConfigureFlags ++
@@ -375,4 +397,6 @@ stdenv.mkDerivation ({
 }
 
 // optionalAttrs (enableMultilib) { dontMoveLib64 = true; }
+
+// optionalAttrs langJit { lib = "out"; builder = ../builder-jit.sh; }
 )
