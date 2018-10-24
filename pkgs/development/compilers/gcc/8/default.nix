@@ -1,8 +1,9 @@
-{ stdenv, targetPackages, fetchurl, noSysDirs
+{ stdenv, lib, targetPackages, fetchurl, noSysDirs
 , langC ? true, langCC ? true, langFortran ? false
 , langObjC ? stdenv.targetPlatform.isDarwin
 , langObjCpp ? stdenv.targetPlatform.isDarwin
 , langGo ? false
+, langJit ? false
 , profiledCompiler ? false
 , staticCompiler ? false
 , enableShared ? true
@@ -12,6 +13,7 @@
 , libelf                      # optional, for link-time optimizations (LTO)
 , isl ? null # optional, for the Graphite optimization framework.
 , zlib ? null
+, paxctl ? null # optional for langJit
 , enableMultilib ? false
 , enablePlugin ? stdenv.hostPlatform == stdenv.buildPlatform # Whether to support user-supplied plug-ins
 , name ? "gcc"
@@ -137,7 +139,8 @@ stdenv.mkDerivation ({
 
   inherit patches;
 
-  outputs = [ "out" "lib" "man" "info" ];
+  outputs = [ "out" "man" "info" ] ++ lib.optional (! langJit) "lib";
+  lib = if langJit then "out" else "lib";
   setOutputFlags = false;
   NIX_NO_SELF_RPATH = true;
 
@@ -197,7 +200,7 @@ stdenv.mkDerivation ({
     libcCross crossMingw;
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ texinfo which gettext ]
+  nativeBuildInputs = [ texinfo which gettext paxctl ]
     ++ (optional (perl != null) perl);
 
   # For building runtime libs
@@ -261,6 +264,7 @@ stdenv.mkDerivation ({
           ++ optional langObjC     "objc"
           ++ optional langObjCpp   "obj-c++"
           ++ optionals crossDarwin [ "objc" "obj-c++" ]
+          ++ optional langJit      "jit"
           )
         )
       }"
@@ -276,6 +280,25 @@ stdenv.mkDerivation ({
 
     # Optional features
     optional (isl != null) "--with-isl=${isl}" ++
+
+    optionals langJit [
+      "--enable-shared"
+      "--enable-host-shared"
+      "--enable-linker-build-id"
+      "--enable-linker-hash-style=gnu"
+      "--enable-checking=release"
+      # "--disable-multilib"
+      # "--disable-bootstrap"
+      # "--disable-libssp"
+      # "--disable-lto"
+      # "--disable-libquadmath"
+      # "--disable-liboffloadmic"
+      # "--disable-libada"
+      # "--disable-libsanitizer"
+      # "--disable-libquadmath-support"
+      # "--disable-libgomp"
+      # "--disable-libvtv"
+    ] ++
 
     (import ../common/platform-flags.nix { inherit (stdenv) lib targetPlatform; }) ++
     optional (targetPlatform != hostPlatform) crossConfigureFlags ++
@@ -390,4 +413,6 @@ stdenv.mkDerivation ({
 }
 
 // optionalAttrs (enableMultilib) { dontMoveLib64 = true; }
+
+// optionalAttrs langJit { lib = "out"; builder = ../builder-jit.sh; }
 )
