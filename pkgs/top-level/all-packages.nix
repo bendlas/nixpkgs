@@ -15957,12 +15957,14 @@ with pkgs;
 
   bookworm = callPackage ../applications/office/bookworm { };
 
-  chromium = callPackage ../applications/networking/browsers/chromium {
+  chromium = callPackage ../applications/networking/browsers/chromium rec {
     channel = "stable";
     pulseSupport = config.pulseaudio or true;
     enablePepperFlash = config.chromium.enablePepperFlash or false;
     enableWideVine = config.chromium.enableWideVine or false;
     gnome = gnome2;
+    llvmPackages = llvmPackages_7;
+    stdenv = llvmPackages.stdenv;
   };
 
   chronos = callPackage ../applications/networking/cluster/chronos { };
