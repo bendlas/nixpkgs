@@ -5425,6 +5425,8 @@ in
     graphviz = graphviz_2_32;
   };
 
+  planck = callPackage ../development/interpreters/clojurescript/planck { };
+
   plan9port = callPackage ../tools/system/plan9port { };
 
   platformioPackages = dontRecurseIntoAttrs (callPackage ../development/arduino/platformio { });
