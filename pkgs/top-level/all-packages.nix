@@ -3697,6 +3697,8 @@ with pkgs;
     inherit (darwin) DarwinTools;
   };
 
+  planck = callPackage ../development/interpreters/clojurescript/planck { };
+
   platformio = if stdenv.hostPlatform.isLinux then platformio-chrootenv else platformio-core;
 
   playbar2 = libsForQt5.callPackage ../applications/audio/playbar2 { };
