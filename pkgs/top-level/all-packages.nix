@@ -7698,6 +7698,8 @@ in
 
   plantuml-server = callPackage ../tools/misc/plantuml-server { };
 
+  planck = callPackage ../development/interpreters/clojurescript/planck { };
+
   plan9port = callPackage ../tools/system/plan9port { };
 
   platformioPackages = dontRecurseIntoAttrs (callPackage ../development/arduino/platformio { });
