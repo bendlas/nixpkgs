@@ -12098,6 +12098,8 @@ with pkgs;
     inherit (darwin) DarwinTools;
   };
 
+  planck = callPackage ../development/interpreters/clojurescript/planck { };
+
   platformioPackages = dontRecurseIntoAttrs (callPackage ../development/embedded/platformio { });
   platformio = if stdenv.isLinux then platformioPackages.platformio-chrootenv else platformioPackages.platformio-core;
   platformio-core = platformioPackages.platformio-core;
