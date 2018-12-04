@@ -3250,6 +3250,8 @@ with pkgs;
     inherit (darwin) DarwinTools;
   };
 
+  planck = callPackage ../development/interpreters/clojurescript/planck { };
+
   platformio = if stdenv.hostPlatform.isLinux then platformio-chrootenv else platformio-core;
 
   playwright = playwright-driver;
