@@ -15706,8 +15706,8 @@ with pkgs;
   } // (if stdenv.isAarch64 then {
           stdenv = gcc8Stdenv;
         } else {
-          llvmPackages = llvmPackages_7;
-          stdenv = llvmPackages_7.stdenv;
+          llvmPackages = llvmPackages_6;
+          stdenv = llvmPackages_6.stdenv;
         })
    );
 
