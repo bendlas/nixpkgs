@@ -241,7 +241,12 @@ in rec {
           inherit (oldChannel) sha256bin64;
         };
       in if isLatest channelName channel.version then keepOld else newUpstream;
-    in lib.mapAttrs genLatest channels.linux;
+    in lib.mapAttrs genLatest (channels.linux // {
+        ungoogled = {
+          version = builtins.readFile (import ./ungoogled.nix).chromiumVersion;
+          history = [];
+        };
+      });
 
     getLinuxFlash = channelName: channel: let
       inherit (channel) version;
