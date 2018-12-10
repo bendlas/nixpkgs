@@ -4,7 +4,8 @@
 , libva ? null
 
 # package customization
-, channel ? "stable"
+, ungoogled ? false
+, channel ? if ungoogled then "ungoogled" else "stable"
 , enableNaCl ? false
 , gnomeSupport ? false, gnome ? null
 , gnomeKeyringSupport ? false
@@ -25,17 +26,17 @@ in let
   llvmPackages = llvmPackages_;
 
   callPackage = newScope chromium;
+  ungoogledChromium = import ./ungoogled.nix;
 
   chromium = {
-    inherit stdenv llvmPackages;
+    inherit stdenv llvmPackages ungoogledChromium;
 
     upstream-info = (callPackage ./update.nix {}).getChannel channel;
 
     mkChromiumDerivation = callPackage ./common.nix {
       inherit enableNaCl gnomeSupport gnome
               gnomeKeyringSupport proprietaryCodecs cupsSupport pulseSupport
-              useVaapi
-              enableWideVine;
+              useVaapi ungoogled ungoogledChromium enableWideVine;
     };
 
     browser = callPackage ./browser.nix { inherit channel; };

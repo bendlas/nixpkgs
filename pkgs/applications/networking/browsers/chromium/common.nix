@@ -1,4 +1,4 @@
-{ stdenv, llvmPackages, gn, ninja, which, nodejs, fetchurl, fetchpatch, gnutar
+{ stdenv, llvmPackages, gn, ninja, which, nodejs, fetchurl, fetchpatch, gnutar, linkFarm
 
 # default dependencies
 , bzip2, flac, speex, libopus
@@ -7,7 +7,7 @@
 , xdg_utils, yasm, minizip, libwebp
 , libusb1, pciutils, nss, re2, zlib
 
-, python2Packages, perl, pkgconfig
+, python3, python2Packages, perl, pkgconfig
 , nspr, systemd, kerberos
 , utillinux, alsaLib
 , bison, gperf
@@ -17,6 +17,7 @@
 , protobuf, speechd, libXdamage, cups
 , ffmpeg, libxslt, libxml2, at-spi2-core
 , jdk
+, lcms2, icu, libvpx, fontconfig, freetype, harfbuzz
 
 # optional dependencies
 , libgcrypt ? null # gnomeSupport || cupsSupport
@@ -31,6 +32,8 @@
 , proprietaryCodecs ? true
 , cupsSupport ? true
 , pulseSupport ? false, libpulseaudio ? null
+, ungoogled ? false
+, ungoogledChromium ? null
 
 , upstream-info
 }:
@@ -73,6 +76,9 @@ let
     # "ffmpeg" # https://crbug.com/731766
     # "harfbuzz-ng" # in versions over 63 harfbuzz and freetype are being built together
                     # so we can't build with one from system and other from source
+  ] ++ optionals ungoogled [
+    "icu" "ffmpeg" "fontconfig" "freetype" "harfbuzz-ng" "libdrm" "libevent"
+    "libjpeg" "libvpx" "libxml" "re2"
   ];
 
   opusWithCustomModes = libopus.override {
@@ -88,6 +94,13 @@ let
     ffmpeg libxslt libxml2
     # harfbuzz # in versions over 63 harfbuzz and freetype are being built together
                # so we can't build with one from system and other from source
+  ] ++ optionals ungoogled [
+    libva lcms2 icu libvpx fontconfig freetype harfbuzz
+    (
+        linkFarm "nspr-system-path" [
+          { name = "include/nspr"; path = "${nspr.dev}/include"; }
+        ]
+    )
   ];
 
   # build paths and release info
@@ -131,6 +144,15 @@ let
       ++ optional useVaapi libva
       ++ optional pulseSupport libpulseaudio
       ++ optional (versionAtLeast version "72") jdk.jre;
+
+    prePatch = optionalString ungoogled ''
+      ugcli() {
+        ${python3}/bin/python ${ungoogledChromium}/run_buildkit_cli.py "$@" -b ${ungoogledChromium}/config_bundles/linux_rooted
+      }
+      ugcli prune ./
+      ugcli patches apply ./
+      ugcli domains apply -c domainsubcache.tar.gz ./
+    '';
 
     patches = optional enableWideVine ./patches/widevine.patch ++ [
       ./patches/nix_plugin_paths_68.patch
@@ -213,6 +235,7 @@ let
       for lib in ${toString gnSystemLibraries}; do
         find -type f -path "*third_party/$lib/*"     \
             \! -path "*third_party/crashpad/crashpad/third_party/zlib/*"  \
+            \! -path "*third_party/freetype/include/pstables.h" \
             \! -path "*third_party/$lib/chromium/*"  \
             \! -path "*third_party/$lib/google/*"    \
             \! -path "*base/third_party/icu/*"       \
@@ -232,10 +255,10 @@ let
 
     gnFlags = mkGnFlags ({
       linux_use_bundled_binutils = false;
+      is_debug = false;
       use_lld = false;
       use_gold = true;
       gold_path = "${stdenv.cc}/bin";
-      is_debug = false;
       # at least 2X compilation speedup
       use_jumbo_build = true;
 
@@ -250,10 +273,9 @@ let
       treat_warnings_as_errors = false;
       is_clang = stdenv.cc.isClang;
       clang_use_chrome_plugins = false;
-      remove_webcore_debug_symbols = true;
       enable_swiftshader = false;
       fieldtrial_testing_like_official_build = true;
-
+    } // optionalAttrs (! ungoogled) {
       # Google API keys, see:
       #   http://www.chromium.org/developers/how-tos/api-keys
       # Note: These are for NixOS/nixpkgs use ONLY. For your own distribution,
@@ -261,6 +283,9 @@ let
       google_api_key = "AIzaSyDGi15Zwl11UNe6Y-5XW_upsfyw31qwZPI";
       google_default_client_id = "404761575300.apps.googleusercontent.com";
       google_default_client_secret = "9rIFQjfnkykEmqb6FfjJQD1D";
+      remove_webcore_debug_symbols = true; # interferes with symbol_level flag
+    } // optionalAttrs ungoogled {
+      is_official_build = false; # this interferes with using gold linker
     } // optionalAttrs proprietaryCodecs {
       # enable support for the H.264 codec
       proprietary_codecs = true;
@@ -273,6 +298,12 @@ let
       link_pulseaudio = true;
     } // (extraAttrs.gnFlags or {}));
 
+    preConfigure = optionalString ungoogled ''
+      ugcli() {
+        ${python3}/bin/python ${ungoogledChromium}/run_buildkit_cli.py "$@" -b ${ungoogledChromium}/config_bundles/linux_rooted
+      }
+      BASE_GN_ARGS=$(ugcli gnargs print)
+    '';
     configurePhase = ''
       runHook preConfigure
 
@@ -280,7 +311,9 @@ let
       libExecPath="${libExecPath}"
       python build/linux/unbundle/replace_gn_files.py \
         --system-libraries ${toString gnSystemLibraries}
-      ${gn}/bin/gn gen --args=${escapeShellArg gnFlags} out/Release | tee gn-gen-outputs.txt
+      echo APPLYING UNGOOGLED GN FLAGS
+      echo "$BASE_GN_ARGS"
+      ${gn}/bin/gn gen --args="$BASE_GN_ARGS $gnFlags" out/Release | tee gn-gen-outputs.txt
 
       # Fail if `gn gen` contains a WARNING.
       grep -o WARNING gn-gen-outputs.txt && echo "Found gn WARNING, exiting nix build" && exit 1
