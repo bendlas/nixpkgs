@@ -78,7 +78,7 @@ let
                     # so we can't build with one from system and other from source
   ] ++ optionals ungoogled [
     "icu" "ffmpeg" "fontconfig" "freetype" "harfbuzz-ng" "libdrm" "libevent"
-    "libjpeg" "libvpx" "libxml" "re2"
+    "libjpeg" "libvpx" "libxml"
   ];
 
   opusWithCustomModes = libopus.override {
