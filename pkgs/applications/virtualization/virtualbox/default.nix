@@ -19,10 +19,9 @@ with stdenv.lib;
 let
   python = python2;
   buildType = "release";
-  # Remember to change the extpackRev and version in extpack.nix and
-  # guest-additions/default.nix as well.
-  main = "0rylf1g0vmv0q19iyvyq4dj5h9yvyqqnmmqaqrx93qrv8s1ybssd";
-  version = "5.2.26";
+  # Remember to change the extpackRev and version in extpack.nix as well.
+  main = "f80b0c68182c946fb74ada8034960c38159ad91085b153da1277e4f191af6e1f";
+  version = "6.0.4";
 in stdenv.mkDerivation {
   name = "virtualbox-${version}";
 
@@ -76,11 +75,6 @@ in stdenv.mkDerivation {
      optional enableHardening ./hardened.patch
   ++ [
     ./qtx11extras.patch
-    (fetchpatch {
-      name = "010-qt-5.11.patch";
-      url = "https://git.archlinux.org/svntogit/community.git/plain/trunk/010-qt-5.11.patch?h=packages/virtualbox";
-      sha256 = "0hjx99pg40wqyggnrpylrp5zngva4xrnk7r90i0ynrqc7n84g9pn";
-    })
   ];
 
   postPatch = ''
@@ -192,6 +186,6 @@ in stdenv.mkDerivation {
     license = licenses.gpl2;
     homepage = https://www.virtualbox.org/;
     maintainers = with maintainers; [ flokli sander ];
-    platforms = [ "x86_64-linux" "i686-linux" ];
+    platforms = [ "x86_64-linux" ];
   };
 }
