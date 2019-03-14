@@ -1,8 +1,9 @@
 { newScope, config, stdenv, llvmPackages, gcc8Stdenv, llvmPackages_7
 , makeWrapper, makeDesktopItem, ed
 , glib, gtk3, gnome3, gsettings-desktop-schemas
-
+, overrideCC, wrapCC, ccache
 # package customization
+, useCcache ? false
 , channel ? "stable"
 , enableNaCl ? false
 , gnomeSupport ? false, gnome ? null
@@ -16,7 +17,15 @@
 }:
 
 let
-  stdenv_ = if stdenv.isAarch64 then gcc8Stdenv else llvmPackages_7.stdenv;
+  stdenv_0 = if stdenv.isAarch64 then gcc8Stdenv else llvmPackages_7.stdenv;
+  stdenv_ = if useCcache then overrideCC stdenv_0 (let
+      cccache = ccache.override { unwrappedCC = stdenv_0.cc.cc; };
+    in
+      wrapCC (cccache.links ''
+        export CCACHE_COMPRESS=1
+        export CCACHE_DIR=/var/cache/ccache-chromium
+        export CCACHE_UMASK=007
+      '')) else stdenv_0;
   llvmPackages_ = if stdenv.isAarch64 then llvmPackages else llvmPackages_7;
 in let
   stdenv = stdenv_;
