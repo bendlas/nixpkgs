@@ -1,4 +1,6 @@
-{ stdenv, fetchurl, perl, zlib, makeWrapper }:
+{ stdenv, fetchurl, perl, zlib, makeWrapper
+, unwrappedCC ? stdenv.cc.cc
+}:
 
 let ccache = stdenv.mkDerivation rec {
   name = "ccache-${version}";
@@ -27,9 +29,7 @@ let ccache = stdenv.mkDerivation rec {
 
   doCheck = !stdenv.isDarwin;
 
-  passthru = let
-      unwrappedCC = stdenv.cc.cc;
-    in {
+  passthru = {
     # A derivation that provides gcc and g++ commands, but that
     # will end up calling ccache for the given cacheDir
     links = extraConfig: stdenv.mkDerivation rec {
