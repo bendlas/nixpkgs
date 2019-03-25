@@ -13,15 +13,15 @@ let
     inherit sha256;
   };
 
-  src = if stdenv.hostPlatform.system == "x86_64-linux" then
+  src = if stdenv.buildPlatform.system == "x86_64-linux" then
     (if version == "10"    then fetchboot "10" "x86_64" "08085fsxc1qhqiv3yi38w8lrg3vm7s0m2yvnwr1c92v019806yq2"
     else if version == "8" then fetchboot "8"  "x86_64" "18zqx6jhm3lizn9hh6ryyqc9dz3i96pwaz8f6nxfllk70qi5gvks"
     else throw "No bootstrap jdk for version ${version}")
-  else if stdenv.hostPlatform.system == "i686-linux" then
+  else if stdenv.buildPlatform.system == "i686-linux" then
     (if version == "10"    then fetchboot "10" "i686" "1blb9gyzp8gfyggxvggqgpcgfcyi00ndnnskipwgdm031qva94p7"
     else if version == "8" then fetchboot "8"  "i686" "1yx04xh8bqz7amg12d13rw5vwa008rav59mxjw1b9s6ynkvfgqq9"
     else throw "No bootstrap for version")
-  else throw "No bootstrap jdk for system ${stdenv.hostPlatform.system}";
+  else throw "No bootstrap jdk for system ${stdenv.buildPlatform.system}";
 
   bootstrap = runCommand "openjdk-bootstrap" {
     passthru.home = "${bootstrap}/lib/openjdk";
