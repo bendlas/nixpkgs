@@ -7275,6 +7275,15 @@ in
 
   bootjdk = callPackage ../development/compilers/openjdk/bootstrap.nix { version = "10"; };
 
+  openjdk7 =
+    if stdenv.isDarwin then
+      callPackage ../development/compilers/openjdk-darwin { }
+    else
+      callPackage ../development/compilers/openjdk/7.nix {
+        ant = apacheAnt_1_9;
+        bootjdk = callPackage ../development/compilers/openjdk/bootstrap.nix { version = "7"; };
+      };
+
   openjdk8 =
     if stdenv.isDarwin then
       callPackage ../development/compilers/openjdk/darwin/8.nix { }
