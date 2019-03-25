@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 with lib;
 
@@ -64,6 +64,42 @@ in
           "https://encrypted.google.com/complete/search?output=chrome&q={searchTerms}";
       };
 
+      vaapi.enable = mkOption {
+        type = types.bool;
+        description = "Enable hardware video decoding via VAAPI.";
+        default = true;
+      };
+
+      vaapi.enableIntel = mkOption {
+        type = types.bool;
+        description = "Install Intel VAAPI driver.";
+        default = true;
+      };
+
+      vaapi.enableIntelHybrid = mkOption {
+        type = types.bool;
+        description = "Install Intel hybrid VAAPI driver.";
+        default = true;
+      };
+
+      vaapi.enableIntelMedia = mkOption {
+        type = types.bool;
+        description = "Install Intel media VAAPI driver.";
+        default = true;
+      };
+
+      vaapi.enableVdpau = mkOption {
+        type = types.bool;
+        description = "Emulate VAAPI on VDPAU (e.g. Nvidia).";
+        default = false;
+      };
+
+      vaapi.enableVdpauVaGl = mkOption {
+        type = types.bool;
+        description = "Emulate VDPAU on OpenGL.";
+        default = false;
+      };
+
       extraOpts = mkOption {
         type = types.attrs;
         description = ''
@@ -78,12 +114,23 @@ in
 
   ###### implementation
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf cfg.enable ({
     # for chromium
     environment.etc."chromium/policies/managed/default.json".text = builtins.toJSON defaultProfile;
     environment.etc."chromium/policies/managed/extra.json".text = builtins.toJSON cfg.extraOpts;
     # for google-chrome https://www.chromium.org/administrators/linux-quick-start
     environment.etc."opt/chrome/policies/managed/default.json".text = builtins.toJSON defaultProfile;
     environment.etc."opt/chrome/policies/managed/extra.json".text = builtins.toJSON cfg.extraOpts;
-  };
+  } // lib.mkIf cfg.vaapi.enable {
+    hardware.opengl = {
+      enable = true;
+      extraPackages = with pkgs; [ ]
+        ++ lib.optional cfg.vaapi.enableIntel (vaapiIntel.override {
+          enableHybridCodec = cfg.vaapi.enableIntelHybrid;
+        })
+        ++ lib.optional cfg.vaapi.enableIntelMedia intel-media-driver
+        ++ lib.optional cfg.vaapi.enableVdpau vaapiVdpau
+        ++ lib.optional cfg.vaapi.enableVdpauVaGl libvdpau-va-gl;
+    };
+  });
 }
