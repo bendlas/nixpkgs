@@ -13,7 +13,6 @@ pkg // {
     src = pkg;
   } ''
     unpackPhase
-    VER=$(awk -F "=" '/chromium_version/ {print $2}' $sourceRoot/version.ini | sed -e 's/^[[:space:]]*//')
-    printf %s "$VER" > $out
+    printf %s "$(cat $sourceRoot/chromium_version.txt)" > $out
   '';
 }

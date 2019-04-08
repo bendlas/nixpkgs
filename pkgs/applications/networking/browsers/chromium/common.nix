@@ -17,7 +17,7 @@
 , protobuf, speechd, libXdamage, cups
 , ffmpeg_4, libxslt, libxml2, at-spi2-core
 , jdk
-, lcms2, icu, libvpx, fontconfig, freetype, harfbuzz
+, lcms2, icu64, libvpx, fontconfig, freetype, harfbuzz
 
 # optional dependencies
 , libgcrypt ? null # gnomeSupport || cupsSupport
@@ -95,7 +95,7 @@ let
     # harfbuzz # in versions over 63 harfbuzz and freetype are being built together
                # so we can't build with one from system and other from source
   ] ++ optionals ungoogled [
-    libva lcms2 icu libvpx fontconfig freetype harfbuzz
+    libva lcms2 icu64 libvpx fontconfig freetype harfbuzz
     (
         linkFarm "nspr-system-path" [
           { name = "include/nspr"; path = "${nspr.dev}/include"; }
@@ -146,12 +146,9 @@ let
       ++ optional (versionAtLeast version "72") jdk.jre;
 
     prePatch = optionalString ungoogled ''
-      ugcli() {
-        ${python3}/bin/python ${ungoogledChromium}/run_buildkit_cli.py "$@" -b ${ungoogledChromium}/config_bundles/linux_rooted
-      }
-      ugcli prune ./
-      ugcli patches apply ./
-      ugcli domains apply -c domainsubcache.tar.gz ./
+      ${python3}/bin/python ${ungoogledChromium}/utils/prune_binaries.py ./ ${ungoogledChromium}/pruning.list
+      ${python3}/bin/python ${ungoogledChromium}/utils/patches.py apply ./ ${ungoogledChromium}/patches
+      ${python3}/bin/python ${ungoogledChromium}/utils/domain_substitution.py apply -r ${ungoogledChromium}/domain_regex.list -f ${ungoogledChromium}/domain_substitution.list -c build/domsubcache.tar.gz ./
     '';
 
     patches = optional enableWideVine ./patches/widevine.patch ++ [
@@ -175,7 +172,7 @@ let
       ( githubPatch "65be571f6ac2f7942b4df9e50b24da517f829eec" "1sqv0aba0mpdi4x4f21zdkxz2cf8ji55ffgbfcr88c5gcg0qn2jh" )
     ] ++ optionals ungoogled [
       ## Fix harfbuzz build error
-      ( "${ungoogledChromium}/patches/debian_buster/system/harfbuzz.patch" )
+      ## ( "${ungoogledChromium}/patches/debian_buster/system/harfbuzz.patch" )
     ] ++ optional stdenv.isAarch64
            (if (versionOlder version "71") then
               fetchpatch {
@@ -301,12 +298,6 @@ let
       link_pulseaudio = true;
     } // (extraAttrs.gnFlags or {}));
 
-    preConfigure = optionalString ungoogled ''
-      ugcli() {
-        ${python3}/bin/python ${ungoogledChromium}/run_buildkit_cli.py "$@" -b ${ungoogledChromium}/config_bundles/linux_rooted
-      }
-      BASE_GN_ARGS=$(ugcli gnargs print)
-    '';
     configurePhase = ''
       runHook preConfigure
 
@@ -314,9 +305,7 @@ let
       libExecPath="${libExecPath}"
       python build/linux/unbundle/replace_gn_files.py \
         --system-libraries ${toString gnSystemLibraries}
-      echo APPLYING UNGOOGLED GN FLAGS
-      echo "$BASE_GN_ARGS"
-      ${gn}/bin/gn gen --args="$BASE_GN_ARGS $gnFlags" out/Release | tee gn-gen-outputs.txt
+      ${gn}/bin/gn gen --args="${optionalString ungoogled "$(cat ${ungoogledChromium}/flags.gn)"} $gnFlags" out/Release | tee gn-gen-outputs.txt
 
       # Fail if `gn gen` contains a WARNING.
       grep -o WARNING gn-gen-outputs.txt && echo "Found gn WARNING, exiting nix build" && exit 1
