@@ -20,8 +20,9 @@ let
     mkExtraBuildCommands = cc: ''
       rsrc="$out/resource-root"
       mkdir "$rsrc"
-      ln -s "${cc}/lib/clang/${release_version}/include" "$rsrc"
+      ln -s "${cc}/lib/clang/${release_version}/include" "$rsrc/include"
       ln -s "${targetLlvmLibraries.compiler-rt.out}/lib" "$rsrc/lib"
+      ln -s "${targetLlvmLibraries.compiler-rt.out}/share" "$rsrc/share"
       echo "-resource-dir=$rsrc" >> $out/nix-support/cc-cflags
     '' + stdenv.lib.optionalString stdenv.targetPlatform.isLinux ''
       echo "--gcc-toolchain=${tools.clang-unwrapped.gcc}" >> $out/nix-support/cc-cflags
