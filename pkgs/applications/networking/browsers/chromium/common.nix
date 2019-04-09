@@ -1,4 +1,4 @@
-{ stdenv, llvmPackages, gn, ninja, which, nodejs, fetchurl, fetchpatch, gnutar, linkFarm
+{ stdenv, llvmPackages, gn, ninja, which, nodejs, fetchurl, fetchpatch, gnutar, linkFarm, gcc8
 
 # default dependencies
 , bzip2, flac, speex, libopus
@@ -128,11 +128,15 @@ let
     nativeBuildInputs = [
       ninja which python2Packages.python perl pkgconfig
       python2Packages.ply python2Packages.jinja2 nodejs
-      gnutar
+      gnutar llvmPackages.lld llvmPackages.llvm
     ];
 
+    # NIX_CFLAGS_LINK = [ "-stdlib=libstdc++" "-Wl,-lgcc_s" ];
+    # NIX_LDFLAGS = [ "-lgcc_s" ];
+
+
     buildInputs = defaultDependencies ++ [
-      nspr nss systemd
+      nspr nss systemd # glibc gcc8
       utillinux alsaLib
       bison gperf kerberos
       glib gtk3 dbus-glib
@@ -251,6 +255,7 @@ let
       ln -s ${stdenv.cc}/bin/clang              third_party/llvm-build/Release+Asserts/bin/clang
       ln -s ${stdenv.cc}/bin/clang++            third_party/llvm-build/Release+Asserts/bin/clang++
       ln -s ${llvmPackages.llvm}/bin/llvm-ar    third_party/llvm-build/Release+Asserts/bin/llvm-ar
+      ln -s ${llvmPackages.lld}/bin/lld         third_party/llvm-build/Release+Asserts/bin/lld
     '';
 
     gnFlags = mkGnFlags ({
@@ -285,12 +290,20 @@ let
       google_default_client_secret = "9rIFQjfnkykEmqb6FfjJQD1D";
       remove_webcore_debug_symbols = true; # interferes with symbol_level flag
     } // optionalAttrs ungoogled {
-      is_official_build = false; # this interferes with using gold linker
+      # is_official_build = true; # this interferes with using gold linker
+      use_gold = false;
+      use_lld = true;
+      use_custom_libcxx = false;
+      custom_toolchain = "//build/toolchain/linux/unbundle:default";
+      host_toolchain = "//build/toolchain/linux/unbundle:default";
+      use_allocator = "none";
+      gold_path = "";
+      goma_dir = "";
     } // optionalAttrs proprietaryCodecs {
       # enable support for the H.264 codec
       proprietary_codecs = true;
       enable_hangout_services_extension = true;
-      ffmpeg_branding = "Chrome";
+      ffmpeg_branding = "ChromeOS";
     } // optionalAttrs useVaapi {
       use_vaapi = true;
     } // optionalAttrs pulseSupport {
