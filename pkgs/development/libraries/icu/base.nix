@@ -2,6 +2,7 @@
 { stdenv, lib, fetchurl, fixDarwinDylibNames
   # Cross-compiled icu4c requires a build-root of a native compile
 , buildRootOnly ? false, nativeBuildRoot
+, icuPython ? null
 }:
 
 let
@@ -13,6 +14,8 @@ let
         + (stdenv.lib.replaceChars ["."] ["_"] version) + "-src.tgz";
       inherit sha256;
     };
+
+    nativeBuildInputs = lib.optional (! isNull icuPython) icuPython;
 
     postUnpack = ''
       sourceRoot=''${sourceRoot}/source
