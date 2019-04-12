@@ -92,7 +92,23 @@ let
         targetLlvmLibraries.compiler-rt
       ];
       extraBuildCommands = ''
-        echo "-target ${stdenv.targetPlatform.config} -rtlib=compiler-rt" >> $out/nix-support/cc-cflags
+        echo "-target ${stdenv.targetPlatform.config}" >> $out/nix-support/cc-cflags
+      '' + mkExtraBuildCommands cc;
+    };
+
+    lldLibcxxClang = wrapCCWith rec {
+      cc = tools.clang-unwrapped;
+      libcxx = targetLlvmLibraries.libcxx;
+      bintools = wrapBintoolsWith {
+        inherit (tools) bintools;
+      };
+      extraPackages = [
+        targetLlvmLibraries.libcxx
+        targetLlvmLibraries.libcxxabi
+        targetLlvmLibraries.compiler-rt
+      ];
+      extraBuildCommands = ''
+        echo "-target ${stdenv.targetPlatform.config}" >> $out/nix-support/cc-cflags
       '' + mkExtraBuildCommands cc;
     };
 
@@ -108,7 +124,7 @@ let
         targetLlvmLibraries.compiler-rt
       ];
       extraBuildCommands = ''
-        echo "-target ${stdenv.targetPlatform.config} -rtlib=compiler-rt" >> $out/nix-support/cc-cflags
+        echo "-target ${stdenv.targetPlatform.config}" >> $out/nix-support/cc-cflags
       '' + mkExtraBuildCommands cc;
     };
 
@@ -139,6 +155,14 @@ let
     stdenv = overrideCC stdenv buildLlvmTools.clang;
 
     libcxxStdenv = overrideCC stdenv buildLlvmTools.libcxxClang;
+
+    lldStdenv = overrideCC stdenv buildLlvmTools.lldClang;
+
+    lldLibcxxStdenv = overrideCC stdenv buildLlvmTools.lldLibcxxClang;
+
+    lldStdenvNoLibc = overrideCC stdenv buildLlvmTools.lldClangNoLibc;
+
+    lldStdenvNoCompilerRt = overrideCC stdenv buildLlvmTools.lldClangNoCompilerRt;
 
     libcxx = callPackage ./libc++ {};
 
