@@ -3,6 +3,7 @@
   # Cross-compiled icu4c requires a build-root of a native compile
 , buildRootOnly ? false, nativeBuildRoot
 , icuPython ? null
+, dataPackaging ? "library" # can be archive
 }:
 
 let
@@ -40,10 +41,12 @@ let
     '';
 
     configureFlags = [ "--disable-debug" ]
+      ++ stdenv.lib.optional (dataPackaging != "library") "--with-data-packaging=${dataPackaging}"
       ++ stdenv.lib.optional (stdenv.isFreeBSD || stdenv.isDarwin) "--enable-rpath"
       ++ stdenv.lib.optional (stdenv.buildPlatform != stdenv.hostPlatform) "--with-cross-build=${nativeBuildRoot}";
 
-    enableParallelBuilding = true;
+    # https://trac.macports.org/ticket/17203
+    enableParallelBuilding = dataPackaging != "archive";
 
     meta = with stdenv.lib; {
       description = "Unicode and globalization support library";
@@ -88,6 +91,10 @@ let
       mv build $out
       echo "Doing build-root only, exiting now" >&2
       exit 0
+    '';
+  } // lib.optionalAttrs ( dataPackaging == "archive" ) {
+    postConfigure = ''
+      export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`pwd`/bin"
     '';
   };
 
