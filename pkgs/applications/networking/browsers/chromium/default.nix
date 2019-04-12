@@ -1,6 +1,7 @@
 { newScope, config, stdenv, llvmPackages, gcc8Stdenv, llvmPackages_8
 , makeWrapper, makeDesktopItem, ed
 , glib, gtk3, gnome3, gsettings-desktop-schemas
+, icu64, ffmpeg_4
 , libva ? null
 
 # package customization
@@ -19,7 +20,7 @@
 }:
 
 let
-  stdenv_ = if stdenv.isAarch64 then gcc8Stdenv else llvmPackages_8.stdenv;
+  stdenv_ = if stdenv.isAarch64 then gcc8Stdenv else llvmPackages_8.lldLibcxxStdenv;
   llvmPackages_ = if stdenv.isAarch64 then llvmPackages else llvmPackages_8;
 in let
   stdenv = stdenv_;
@@ -37,6 +38,8 @@ in let
       inherit enableNaCl gnomeSupport gnome
               gnomeKeyringSupport proprietaryCodecs cupsSupport pulseSupport
               useVaapi ungoogled ungoogledChromium enableWideVine;
+      icu = icu64; # .override { dataPackaging = "archive"; }; # for icudtl.dat
+      ffmpeg = ffmpeg_4;
     };
 
     browser = callPackage ./browser.nix { inherit channel; };

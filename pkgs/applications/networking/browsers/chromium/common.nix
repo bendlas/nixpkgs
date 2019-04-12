@@ -1,4 +1,5 @@
 { stdenv, llvmPackages, gn, ninja, which, nodejs, fetchurl, fetchpatch, gnutar, linkFarm, gcc8
+# , autoPatchelfHook
 
 # default dependencies
 , bzip2, flac, speex, libopus
@@ -15,9 +16,9 @@
 , glibc
 , libXScrnSaver, libXcursor, libXtst, libGLU_combined
 , protobuf, speechd, libXdamage, cups
-, ffmpeg_4, libxslt, libxml2, at-spi2-core
+, ffmpeg, libxslt, libxml2, at-spi2-core
 , jdk
-, lcms2, icu64, libvpx, fontconfig, freetype, harfbuzz
+, lcms2, icu, libvpx, fontconfig, freetype, harfbuzz
 
 # optional dependencies
 , libgcrypt ? null # gnomeSupport || cupsSupport
@@ -77,7 +78,8 @@ let
     # "harfbuzz-ng" # in versions over 63 harfbuzz and freetype are being built together
                     # so we can't build with one from system and other from source
   ] ++ optionals ungoogled [
-    "icu" "ffmpeg" "fontconfig" "freetype" "harfbuzz-ng" "libdrm" "libevent"
+    # "icu" we need icudtl.dat for that
+    "ffmpeg" "fontconfig" "freetype" "harfbuzz-ng" "libdrm" "libevent"
     "libjpeg" "libvpx" "libxml" "ffmpeg"
   ];
 
@@ -91,11 +93,12 @@ let
     libpng libcap
     xdg_utils yasm minizip libwebp
     libusb1 re2 zlib
-    ffmpeg_4 libxslt libxml2
+    ffmpeg libxslt libxml2
     # harfbuzz # in versions over 63 harfbuzz and freetype are being built together
                # so we can't build with one from system and other from source
   ] ++ optionals ungoogled [
-    libva lcms2 icu64 libvpx fontconfig freetype harfbuzz
+    libva lcms2 icu libvpx fontconfig freetype harfbuzz
+    # libXcursor libXdamage libXtst
     (
         linkFarm "nspr-system-path" [
           { name = "include/nspr"; path = "${nspr.dev}/include"; }
@@ -126,18 +129,29 @@ let
     src = upstream-info.main;
 
     nativeBuildInputs = [
-      ninja which python2Packages.python perl pkgconfig
+      gn ninja which python2Packages.python perl pkgconfig
       python2Packages.ply python2Packages.jinja2 nodejs
-      gnutar llvmPackages.lld llvmPackages.llvm
+      gnutar # llvmPackages.lld llvmPackages.llvm
+      # ## somehow, with our build config
+      # autoPatchelfHook
     ];
 
-    # NIX_CFLAGS_LINK = [ "-stdlib=libstdc++" "-Wl,-lgcc_s" ];
-    # NIX_LDFLAGS = [ "-lgcc_s" ];
+    # NIX_CFLAGS_COMPILE = [ "-stdlib=libstdc++"  ];
+    # NIX_CFLAGS_LINK = [ "-stdlib=libstdc++"  ];
+    # NIX_LDFLAGS = [ "-stdlib=libstdc++" ];
 
+    # NIX_CFLAGS_LINK = [ "-stdlib=libc++" "-Wl,-lc++abi" ];
+    # NIX_LDFLAGS = [ "-lc++abi" ];
+    # ## some tool, bytecode_builtins_list_generator, generated during build needs this
+    # LD_LIBRARY_PATH = stdenv.lib.makeLibraryPath ( nativeBuildInputs ++ buildInputs );
+    # ## LD_LIBRARY_PATH needs to be unset, for autoPatchelfHook to run correctly
+    # preFixup = ''
+    #   LD_LIBRARY_PATH=
+    # '';
 
     buildInputs = defaultDependencies ++ [
       nspr nss systemd # glibc gcc8
-      utillinux alsaLib
+      utillinux alsaLib # llvmPackages.libcxxabi llvmPackages.libcxx
       bison gperf kerberos
       glib gtk3 dbus-glib
       libXScrnSaver libXcursor libXtst libGLU_combined
@@ -150,6 +164,7 @@ let
       ++ optional (versionAtLeast version "72") jdk.jre;
 
     prePatch = optionalString ungoogled ''
+      # sed '/icudtl.dat/d' ${ungoogledChromium}/pruning.list > pruning.list || die
       ${python3}/bin/python ${ungoogledChromium}/utils/prune_binaries.py ./ ${ungoogledChromium}/pruning.list
       ${python3}/bin/python ${ungoogledChromium}/utils/patches.py apply ./ ${ungoogledChromium}/patches
       ${python3}/bin/python ${ungoogledChromium}/utils/domain_substitution.py apply -r ${ungoogledChromium}/domain_regex.list -f ${ungoogledChromium}/domain_substitution.list -c build/domsubcache.tar.gz ./
@@ -177,6 +192,12 @@ let
     ] ++ optionals ungoogled [
       ## Fix harfbuzz build error
       ## ( "${ungoogledChromium}/patches/debian_buster/system/harfbuzz.patch" )
+      ### patch for using system icu
+      ### not needed for now, because our system icu doesn't yet build icudtl.dat
+      # (fetchpatch {
+      #   url = https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/30c82e14bed1dba2ab6ca02b88aa6b4c7b38c512/extra/chromium/chromium-system-icu.patch;
+      #   sha256 = "0zi0fq5ji3qlhf6r2b11wgwsm8ribvcmwxaz30dq9b0alxzvy71b";
+      # })
     ] ++ optional stdenv.isAarch64
            (if (versionOlder version "71") then
               fetchpatch {
@@ -290,7 +311,7 @@ let
       google_default_client_secret = "9rIFQjfnkykEmqb6FfjJQD1D";
       remove_webcore_debug_symbols = true; # interferes with symbol_level flag
     } // optionalAttrs ungoogled {
-      # is_official_build = true; # this interferes with using gold linker
+      is_official_build = false;
       use_gold = false;
       use_lld = true;
       use_custom_libcxx = false;
@@ -299,6 +320,9 @@ let
       use_allocator = "none";
       gold_path = "";
       goma_dir = "";
+      ## Try control flow integrity
+      ## http://clang.llvm.org/docs/ControlFlowIntegrity.html
+      is_cfi = true;
     } // optionalAttrs proprietaryCodecs {
       # enable support for the H.264 codec
       proprietary_codecs = true;
@@ -346,6 +370,7 @@ let
       targets = extraAttrs.buildTargets or [];
       commands = map buildCommand targets;
     in concatStringsSep "\n" commands;
+
   };
 
 # Remove some extraAttrs we supplied to the base attributes already.
