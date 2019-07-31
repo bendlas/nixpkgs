@@ -5,6 +5,7 @@
 , enableSoundSense ? false, soundSense, jdk
 , enableStoneSense ? false
 , enableTWBT ? false, twbt
+, enableDebug ? false
 , themes ? {}
 , theme ? null
 # General config options:
@@ -18,6 +19,7 @@ let
   dfhack_ = dfhack.override {
     inherit enableStoneSense;
     inherit enableTWBT;
+    inherit enableDebug;
   };
 
   ptheme =
