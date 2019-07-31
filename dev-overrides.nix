@@ -27,6 +27,7 @@ let
     enableSoundSense = true;
     enableStoneSense = true;
     enableTWBT = true;
+    enableDebug = true;
   };
   aarch64-cross = import ./default.nix {
     crossSystem = lib.systems.examples.aarch64-multiplatform;
