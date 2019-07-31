@@ -2,6 +2,7 @@
 , perl, XMLLibXML, XMLLibXSLT, zlib
 , enableStoneSense ? false,  allegro5, libGLU_combined
 , enableTWBT ? true, twbt
+, enableDebug ? false
 , SDL
 , dfVersion
 }:
@@ -41,9 +42,9 @@ let
       prerelease = true;
     };
     "0.44.12" = {
-      dfHackRelease = "0.44.12-r1";
-      sha256 = "0j03lq6j6w378z6cvm7jspxc7hhrqm8jaszlq0mzfvap0k13fgyy";
-      xmlRev = "23500e4e9bd1885365d0a2ef1746c321c1dd5094";
+      dfHackRelease = "0.44.12-r2";
+      sha256 = "0wkg8x3ar9n7cwss37bvwd2kgpwgbnn33bl0sgg9pcah86df5wlh";
+      xmlRev = "44215836d5b57c3722b126aaf481f652385f3a23";
       prerelease = false;
     };
   };
@@ -100,7 +101,10 @@ let
     nativeBuildInputs = [ cmake perl XMLLibXML XMLLibXSLT fakegit ];
     # We don't use system libraries because dfhack needs old C++ ABI.
     buildInputs = [ zlib SDL ]
-               ++ lib.optionals enableStoneSense [ allegro5 libGLU_combined ];
+               ++ lib.optionals enableStoneSense [ allegro5 libGLU_combined ]
+               ++ lib.optional  enableDebug <nixpkgs/pkgs/build-support/setup-hooks/separate-debug-info.sh>;
+
+    outputs = [ "out" ] ++ lib.optional enableDebug "debug";
 
     preConfigure = ''
       # Trick build system into believing we have .git
