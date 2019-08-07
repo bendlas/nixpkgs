@@ -242,6 +242,16 @@
        Only some exporters are affected by the latter, namely the exporters <literal>dovecot</literal>, <literal>node</literal>, <literal>postfix</literal> and <literal>varnish</literal>.
      </para>
    </listitem>
+   <listitem>
+     <para>
+       The old deprecated <literal>emacs</literal> package sets have been dropped.
+       What used to be called <literal>emacsPackagesNg</literal> is now simply called <literal>emacsPackages</literal>.
+
+       A lot of packages are now taken directly from Melpa and there are some backwards incompatible changes in attribute names.
+       These changes are mostly trivial (<literal>colorTheme</literal> -> <literal>color-theme</literal>).
+     </para>
+   </listitem>
+
   </itemizedlist>
  </section>
 
