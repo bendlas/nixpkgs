@@ -26,7 +26,7 @@ let
       };
     };
 
-  in [ promise semaphore ]);
+  in [ promise semaphore epkgs.aio ]);
 
 in pkgs.mkShell {
   buildInputs = [
