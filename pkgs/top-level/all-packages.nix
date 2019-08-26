@@ -3988,6 +3988,9 @@ in
 
   intel-media-sdk = callPackage ../development/libraries/intel-media-sdk { };
 
+  intel-graphics-compiler = callPackage ../development/tools/intel-graphics-compiler { };
+
+  compute-runtime = callPackage ../development/tools/compute-runtime { };
   compute-runtime-binary = callPackage ../development/tools/compute-runtime/binary.nix { };
 
   invoice2data  = callPackage ../tools/text/invoice2data  { };
@@ -8241,6 +8244,8 @@ in
   });
 
   llvmPackages_latest = llvmPackages_9;
+
+  llvm-spirv = callPackage ../development/tools/llvm-spirv { };
 
   lorri = throw "lorri is not stable yet. Please go to https://github.com/target/lorri and follow the installation instructions there, for the time being.";
 
@@ -12949,6 +12954,8 @@ in
   opencl-headers = opencl-headers_2_2;
 
   opencl-clhpp = callPackage ../development/libraries/opencl-clhpp { };
+
+  opencl-clang = callPackage ../development/tools/opencl-clang { };
 
   opencollada = callPackage ../development/libraries/opencollada { };
 
