@@ -3988,6 +3988,8 @@ in
 
   intel-media-sdk = callPackage ../development/libraries/intel-media-sdk { };
 
+  compute-runtime-binary = callPackage ../development/tools/compute-runtime/binary.nix { };
+
   invoice2data  = callPackage ../tools/text/invoice2data  { };
 
   inxi = callPackage ../tools/system/inxi { };
