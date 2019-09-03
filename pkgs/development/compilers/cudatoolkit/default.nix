@@ -2,6 +2,7 @@
 , gcc48, gcc49, gcc5, gcc6, gcc7
 , xorg, gtk2, gdk-pixbuf, glib, fontconfig, freetype, unixODBC, alsaLib, glibc
 , addOpenGLRunpath
+, libxml2
 }:
 
 let
@@ -13,10 +14,12 @@ let
     , developerProgram ? false
     , python ? python27
     , runPatches ? []
+    , extraDrvArgs ? {}
+    , extraNativeBuildInputs ? []
     }:
 
-    stdenv.mkDerivation rec {
-      pname = "cudatoolkit";
+    stdenv.mkDerivation (lib.recursiveUpdate (rec {
+      name = "cudatoolkit-${version}";
       inherit version runPatches;
 
       dontPatchELF = true;
@@ -40,7 +43,7 @@ let
 
       outputs = [ "out" "lib" "doc" ];
 
-      nativeBuildInputs = [ perl makeWrapper addOpenGLRunpath ];
+      nativeBuildInputs = [ perl makeWrapper addOpenGLRunpath ] ++ extraNativeBuildInputs;
       buildInputs = [ gdk-pixbuf ]; # To get $GDK_PIXBUF_MODULE_FILE via setup-hook
       runtimeDependencies = [
         ncurses5 expat python zlib glibc
@@ -189,7 +192,7 @@ let
         platforms = [ "x86_64-linux" ];
         license = licenses.unfree;
       };
-    };
+    }) extraDrvArgs);
 
 in rec {
   cudatoolkit_6 = common {
@@ -302,5 +305,61 @@ in rec {
     gcc = gcc7;
   };
 
-  cudatoolkit_10 = cudatoolkit_10_0;
+  cudatoolkit_10_1 = common rec {
+    version = "10.1.243";
+    url = "https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run";
+    sha256 = "0caxhlv2bdq863dfp6wj7nad66ml81vasq2ayf11psvq2b12vhp7";
+
+    gcc = gcc7;
+    extraDrvArgs = {
+      LD_LIBRARY_PATH = (lib.makeLibraryPath [ libxml2 stdenv.cc.cc ]);
+      unpackPhase = ''
+        sh $src --keep --noexec
+      '';
+      installPhase = ''
+        (cd pkg/builds
+         cp -r cuda-toolkit $out
+         cp -r cublas/include/* $out/include/
+         cp -r cublas/lib64/* $out/lib64/
+         cp -r cuda-samples $out/samples)
+        rm $out/tools/CUDA_Occupancy_Calculator.xls # FIXME: why?
+
+        # let's remove the 32-bit libraries, they confuse the lib64->lib mover
+        rm -rf $out/lib
+
+        # Change the #error on GCC > 4.9 to a #warning.
+        sed -i $out/include/host_config.h -e 's/#error\(.*unsupported GNU version\)/#warning\1/'
+
+        # Fix builds with newer glibc version
+        sed -i "1 i#define _BITS_FLOATN_H" "$out/include/host_defines.h"
+
+        # Ensure that cmake can find CUDA.
+        mkdir -p $out/nix-support
+        echo "cmakeFlags+=' -DCUDA_TOOLKIT_ROOT_DIR=$out'" >> $out/nix-support/setup-hook
+
+        # Move some libraries to the lib output so that programs that
+        # depend on them don't pull in this entire monstrosity.
+        mkdir -p $lib/lib
+        mv -v $out/lib64/libcudart* $lib/lib/
+
+        # Remove OpenCL libraries as they are provided by ocl-icd and driver.
+        rm -f $out/lib64/libOpenCL*
+
+        # Set compiler for NVCC.
+        wrapProgram $out/bin/nvcc \
+          --prefix PATH : ${gcc}/bin
+
+        # nvprof do not find any program to profile if LD_LIBRARY_PATH is not set
+        wrapProgram $out/bin/nvprof \
+          --prefix LD_LIBRARY_PATH : $out/lib
+      '' + lib.optionalString (lib.versionOlder version "8.0") ''
+        # Hack to fix building against recent Glibc/GCC.
+        echo "NIX_CFLAGS_COMPILE+=' -D_FORCE_INLINES'" >> $out/nix-support/setup-hook
+      '' + ''
+        runHook postInstall
+      '';
+    };
+  };
+
+  cudatoolkit_10 = cudatoolkit_10_1;
 }
