@@ -7,7 +7,7 @@ let
       export CCACHE_DIR=/var/cache/ccache-chromium
       export CCACHE_UMASK=007
     '';
-  })); in {
+  })); in rec {
   chromium = chromium.override {
     enablePepperFlash = true;
     enableWideVine = true;
@@ -58,6 +58,8 @@ let
       configuration = ../bendlas-nixos-config/test-config.nix;
     };
   };
+
+  kernel = systems.test.config.boot.kernelPackages.kernel.dev;
 
   clojure-jfx = pkgs.clojure.override {
     jdk = pkgs.jdk11;
