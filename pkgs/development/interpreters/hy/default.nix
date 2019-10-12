@@ -18,6 +18,9 @@ python2Packages.buildPythonApplication rec {
     rply
   ];
 
+  ## fails with python3 due to no check phase defined
+  doCheck = false;
+
   meta = with stdenv.lib; {
     description = "A LISP dialect embedded in Python";
     homepage = "http://hylang.org/";
