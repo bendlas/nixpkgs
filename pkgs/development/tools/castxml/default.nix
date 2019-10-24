@@ -8,13 +8,13 @@ stdenv.mkDerivation rec {
 
   name    = "${pname}-${version}";
   pname   = "CastXML";
-  version = "20180403";
+  version = "0.2.0";
 
   src = fetchFromGitHub {
     owner  = "CastXML";
     repo   = "CastXML";
-    rev    = "c2a44d06d9379718292b696f4e13a2725ff9d95e";
-    sha256 = "1hjh8ihjyp1m2jb5yypp5c45bpbz8k004f4p1cjw4gc7pxhjacdj";
+    rev    = "v${version}";
+    sha256 = "1qpgr5hyb692h7l5igmq53m6a6vi4d9qp8ks893cflfx9955h3ip";
   };
 
   cmakeFlags = [
