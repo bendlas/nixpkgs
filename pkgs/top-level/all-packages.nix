@@ -31993,6 +31993,8 @@ with pkgs;
 
   hackrf = callPackage ../applications/radio/hackrf { };
 
+  hackrf-spectrum-analyser = callPackage ../applications/radio/hackrf-spectrum-analyzer { };
+
   hacksaw = callPackage ../tools/misc/hacksaw { };
 
   hakuneko = callPackage ../tools/misc/hakuneko { };
