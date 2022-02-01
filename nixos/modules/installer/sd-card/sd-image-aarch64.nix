@@ -18,6 +18,14 @@
   # - ttyAMA0: for QEMU's -machine virt
   boot.kernelParams = ["console=ttyS0,115200n8" "console=ttyAMA0,115200n8" "console=tty0"];
 
+  ## TODO share firmware generation with `nixos-rebuild boot`
+  ## possibly extract pkgs.aarch64-firmware from this
+  ## `nixos-rebuild` boot should check if firmware folder is empty
+  ## and initialize if so. Otherwise notify with instructions to
+  ## update firmware if desired
+
+  ## TODO sunset this infrastructure for raspi 4 in favor of the standardized UEFI
+  ## runtime: https://github.com/pftf/RPi4
   sdImage = {
     populateFirmwareCommands = let
       configTxt = pkgs.writeText "config.txt" ''
