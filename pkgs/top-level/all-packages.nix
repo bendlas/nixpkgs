@@ -2614,6 +2614,8 @@ with pkgs;
     inherit (gst_all_1) gstreamer gst-plugins-base;
   };
 
+  mouse_m908 = callPackage ../tools/misc/mouse_m908 { };
+
   mpdcron = callPackage ../tools/audio/mpdcron { };
 
   mpd-sima = python3Packages.callPackage ../tools/audio/mpd-sima { };
