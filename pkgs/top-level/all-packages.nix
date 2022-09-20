@@ -5878,6 +5878,8 @@ with pkgs;
 
   mousetweaks = callPackage ../applications/accessibility/mousetweaks { };
 
+  mouse_m908 = callPackage ../tools/misc/mouse_m908 { };
+
   mp3blaster = callPackage ../applications/audio/mp3blaster { };
 
   mp3cat = callPackage ../tools/audio/mp3cat { };
