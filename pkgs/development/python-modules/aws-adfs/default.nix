@@ -19,7 +19,7 @@
 
 buildPythonPackage rec {
   pname = "aws-adfs";
-  version = "2.2.1";
+  version = "2.4.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.6";
@@ -28,7 +28,7 @@ buildPythonPackage rec {
     owner = "venth";
     repo = pname;
     rev = "refs/tags/${version}";
-    hash = "sha256-REJYuOGq22onMj4WcfA7i4/cG99UGZA9D99ESIKY1A8=";
+    hash = "sha256-Ya8mI++mraZ1VE0OjBpLoP7IdbJq8aGFNpUir6nQ3J0=";
   };
 
   nativeBuildInputs = [
@@ -47,18 +47,19 @@ buildPythonPackage rec {
     requests-kerberos
   ];
 
-  patches = [
-    # Apply new fido2 api (See: venth/aws-adfs#243)
-    (fetchpatch {
-      url = "https://github.com/venth/aws-adfs/commit/09836d89256f3537270d760d8aa30ab9284725a8.diff";
-      hash = "sha256-pAAJvOa43BXtyWvV8hsLe2xqd5oI+vzndckRTRol61s=";
-    })
-  ];
+  # patches = [
+  #   # Apply new fido2 api (See: venth/aws-adfs#243)
+  #   (fetchpatch {
+  #     url = "https://github.com/venth/aws-adfs/commit/09836d89256f3537270d760d8aa30ab9284725a8.diff";
+  #     hash = "sha256-pAAJvOa43BXtyWvV8hsLe2xqd5oI+vzndckRTRol61s=";
+  #   })
+  # ];
 
   postPatch = ''
     substituteInPlace pyproject.toml \
       --replace 'boto3 = "^1.20.50"' 'boto3 = "*"' \
-      --replace 'botocore = ">=1.12.6"' 'botocore = "*"'
+      --replace 'botocore = ">=1.12.6"' 'botocore = "*"' \
+      --replace 'configparser = "5.2"' 'configparser = "*"'
   '';
 
   nativeCheckInputs = [
