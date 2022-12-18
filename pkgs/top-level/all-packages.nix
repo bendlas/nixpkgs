@@ -39014,6 +39014,9 @@ with pkgs;
   mfc5890cncupswrapper = callPackage ../misc/cups/drivers/mfc5890cncupswrapper { };
   mfc5890cnlpr = callPackage ../misc/cups/drivers/mfc5890cnlpr { };
 
+  mfc6490cwcupswrapper = callPackage ../misc/cups/drivers/mfc6490cwcupswrapper { };
+  mfc6490cwlpr = callPackage ../misc/cups/drivers/mfc6490cwlpr { };
+
   mfc9140cdncupswrapper = callPackage ../misc/cups/drivers/mfc9140cdncupswrapper { };
   mfc9140cdnlpr = callPackage ../misc/cups/drivers/mfc9140cdnlpr { };
 
@@ -39033,6 +39036,8 @@ with pkgs;
   fflinuxprint = callPackage ../misc/cups/drivers/fflinuxprint { };
 
   fxlinuxprint = callPackage ../misc/cups/drivers/fxlinuxprint { };
+
+  brscan3 = callPackage ../applications/graphics/sane/backends/brscan3 { };
 
   brscan4 = callPackage ../applications/graphics/sane/backends/brscan4 { };
 
