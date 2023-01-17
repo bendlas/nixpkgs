@@ -22,8 +22,14 @@
 , # Legacy overrides to the intermediate kernel config, as string
   extraConfig ? ""
 
+, # Kernel options defined by stdenv
+  extraPlatformConfig ? stdenv.hostPlatform.linux-kernel.extraConfig or ""
+
   # Additional make flags passed to kbuild
 , extraMakeFlags ? []
+
+, # Add common config
+  addCommonStructuredConfig ? true
 
 , # kernel intermediate config overrides, as a set
  structuredExtraConfig ? {}
@@ -92,16 +98,16 @@ let
     ia32Emulation = true;
   } // features) kernelPatches;
 
-  commonStructuredConfig = import ./common-config.nix {
-    inherit lib stdenv version;
-
-    features = kernelFeatures; # Ensure we know of all extra patches, etc.
-  };
+  commonStructuredConfig = lib.optionalAttrs addCommonStructuredConfig
+    (import ./common-config.nix {
+      inherit lib stdenv version;
+      features = kernelFeatures; # Ensure we know of all extra patches, etc.
+    });
 
   intermediateNixConfig = configfile.moduleStructuredConfig.intermediateNixConfig
     # extra config in legacy string format
     + extraConfig
-    + stdenv.hostPlatform.linux-kernel.extraConfig or "";
+    + extraPlatformConfig;
 
   structuredConfigFromPatches =
         map ({extraStructuredConfig ? {}, ...}: {settings=extraStructuredConfig;}) kernelPatches;
