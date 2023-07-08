@@ -9,8 +9,8 @@ let
   registrationFile = "${dataDir}/telegram-registration.yaml";
   cfg = config.services.mautrix-telegram;
   settingsFormat = pkgs.formats.json { };
-  settingsFile = settingsFormat.generate "mautrix-telegram-config.json" cfg.settings;
-
+  settingsFileStore = settingsFormat.generate "mautrix-telegram-config.json" cfg.settings;
+  settingsFile = "${dataDir}/config.json";
 in
 {
   options = {
@@ -136,6 +136,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    users.users.mautrix-telegram.isNormalUser = true;
+    users.users.mautrix-telegram.group = "mautrix-telegram";
+    users.groups.mautrix-telegram = {};
+
+    systemd.tmpfiles.rules = [
+      "d ${dataDir} 0750 mautrix-telegram mautrix-telegram"
+    ];
     systemd.services.mautrix-telegram = {
       description = "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge.";
 
@@ -161,6 +168,9 @@ in
 
       preStart =
         ''
+          # copy settings file from nix store
+          ${pkgs.coreutils}/bin/cp ${settingsFileStore} ${settingsFile}
+          ${pkgs.coreutils}/bin/chmod u+w ${settingsFile}
           # generate the appservice's registration file if absent
           if [ ! -f '${registrationFile}' ]; then
             ${pkgs.mautrix-telegram}/bin/mautrix-telegram \
@@ -184,7 +194,8 @@ in
         ProtectKernelModules = true;
         ProtectControlGroups = true;
 
-        DynamicUser = true;
+        User = "mautrix-telegram";
+        Group = "mautrix-telegram";
         PrivateTmp = true;
         WorkingDirectory = pkgs.mautrix-telegram; # necessary for the database migration scripts to be found
         StateDirectory = baseNameOf dataDir;
