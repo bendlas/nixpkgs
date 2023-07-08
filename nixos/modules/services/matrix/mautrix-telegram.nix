@@ -7,8 +7,9 @@ let
   registrationFile = "${dataDir}/telegram-registration.yaml";
   cfg = config.services.mautrix-telegram;
   settingsFormat = pkgs.formats.json {};
-  settingsFile =
+  settingsFileStore =
     settingsFormat.generate "mautrix-telegram-config.json" cfg.settings;
+  settingsFile = "${dataDir}/config.json";
 
 in {
   options = {
@@ -134,6 +135,9 @@ in {
   };
 
   config = mkIf cfg.enable {
+    systemd.tmpfiles.rules = [
+      "d ${dataDir} 0750 mautrix-telegram mautrix-telegram"
+    ];
     systemd.services.mautrix-telegram = {
       description = "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge.";
 
@@ -155,13 +159,13 @@ in {
       environment.HOME = dataDir;
 
       preStart = ''
-        # generate the appservice's registration file if absent
-        if [ ! -f '${registrationFile}' ]; then
-          ${pkgs.mautrix-telegram}/bin/mautrix-telegram \
-            --generate-registration \
-            --config='${settingsFile}' \
-            --registration='${registrationFile}'
-        fi
+        ${pkgs.coreutils}/bin/cp ${settingsFileStore} ${settingsFile}
+        ${pkgs.coreutils}/bin/chmod u+w ${settingsFile}
+        # (re-)generate the appservice's registration file
+        ${pkgs.mautrix-telegram}/bin/mautrix-telegram \
+          --generate-registration \
+          --config='${settingsFile}' \
+          --registration='${registrationFile}'
       '' + lib.optionalString (pkgs.mautrix-telegram ? alembic) ''
         # run automatic database init and migration scripts
         ${pkgs.mautrix-telegram.alembic}/bin/alembic -x config='${settingsFile}' upgrade head
