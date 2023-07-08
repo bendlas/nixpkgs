@@ -7,8 +7,9 @@ let
   registrationFile = "${dataDir}/telegram-registration.yaml";
   cfg = config.services.mautrix-telegram;
   settingsFormat = pkgs.formats.json {};
-  settingsFile =
+  settingsFileStore =
     settingsFormat.generate "mautrix-telegram-config.json" cfg.settings;
+  settingsFile = "${dataDir}/config.json";
 
 in {
   options = {
@@ -134,6 +135,9 @@ in {
   };
 
   config = mkIf cfg.enable {
+    systemd.tmpfiles.rules = [
+      "d ${dataDir} 0750 mautrix-telegram mautrix-telegram"
+    ];
     systemd.services.mautrix-telegram = {
       description = "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge.";
 
@@ -155,10 +159,14 @@ in {
       environment.HOME = dataDir;
 
       preStart = ''
+        ${pkgs.coreutils}/bin/cp ${settingsFileStore} ${settingsFile}
+        ${pkgs.coreutils}/bin/chmod u+w ${settingsFile}
         # generate the appservice's registration file if absent
         if [ ! -f '${registrationFile}' ]; then
+          # (re-)generate the appservice's registration file
           ${pkgs.mautrix-telegram}/bin/mautrix-telegram \
             --generate-registration \
+            --base-config='${pkgs.mautrix-telegram}/${pkgs.mautrix-telegram.pythonModule.sitePackages}/mautrix_telegram/example-config.yaml' \
             --config='${settingsFile}' \
             --registration='${registrationFile}'
         fi
