@@ -132,6 +132,10 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    users.users.mautrix-telegram.isNormalUser = true;
+    users.users.mautrix-telegram.group = "mautrix-telegram";
+    users.groups.mautrix-telegram = {};
+
     systemd.tmpfiles.rules = [
       "d ${dataDir} 0750 mautrix-telegram mautrix-telegram"
     ];
@@ -182,7 +186,8 @@ in {
         ProtectKernelModules = true;
         ProtectControlGroups = true;
 
-        DynamicUser = true;
+        User = "mautrix-telegram";
+        Group = "mautrix-telegram";
         PrivateTmp = true;
         WorkingDirectory = pkgs.mautrix-telegram; # necessary for the database migration scripts to be found
         StateDirectory = baseNameOf dataDir;
