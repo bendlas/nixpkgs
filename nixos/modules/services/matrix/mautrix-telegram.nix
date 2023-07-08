@@ -24,12 +24,12 @@ in {
             software = "standard";
           };
 
-          appservice = rec {
+          appservice = {
             database = "sqlite:///${dataDir}/mautrix-telegram.db";
             database_opts = {};
             hostname = "0.0.0.0";
             port = 8080;
-            address = "http://localhost:${toString port}";
+            address = "http://localhost:8080";
           };
 
           bridge = {
@@ -135,6 +135,10 @@ in {
   };
 
   config = mkIf cfg.enable {
+    users.users.mautrix-telegram.isNormalUser = true;
+    users.users.mautrix-telegram.group = "mautrix-telegram";
+    users.groups.mautrix-telegram = {};
+
     systemd.tmpfiles.rules = [
       "d ${dataDir} 0750 mautrix-telegram mautrix-telegram"
     ];
@@ -185,7 +189,8 @@ in {
         ProtectKernelModules = true;
         ProtectControlGroups = true;
 
-        DynamicUser = true;
+        User = "mautrix-telegram";
+        Group = "mautrix-telegram";
         PrivateTmp = true;
         WorkingDirectory = pkgs.mautrix-telegram; # necessary for the database migration scripts to be found
         StateDirectory = baseNameOf dataDir;
@@ -200,5 +205,5 @@ in {
     };
   };
 
-  meta.maintainers = with maintainers; [ pacien vskilet ];
+  meta.maintainers = with maintainers; [ pacien vskilet bendlas ];
 }
