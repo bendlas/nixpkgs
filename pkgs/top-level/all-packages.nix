@@ -20114,6 +20114,9 @@ with pkgs;
     ffmpeg-headless
     ffmpeg-full;
 
+  v4l2-request-ffmpeg = callPackage ../development/libraries/v4l2-request-ffmpeg { };
+  v4l2-request-mpv = wrapMpv (mpv-unwrapped.override { ffmpeg = v4l2-request-ffmpeg; }) {};
+
   ffmpegthumbnailer = callPackage ../development/libraries/ffmpegthumbnailer { };
 
   ffmpeg-normalize = python3Packages.callPackage ../applications/video/ffmpeg-normalize { };
