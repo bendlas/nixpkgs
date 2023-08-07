@@ -7169,6 +7169,9 @@ with pkgs;
     ffmpeg-full
     ;
 
+  v4l2-request-ffmpeg = callPackage ../development/libraries/v4l2-request-ffmpeg { };
+  v4l2-request-mpv = wrapMpv (mpv-unwrapped.override { ffmpeg = v4l2-request-ffmpeg; }) {};
+
   fftwSinglePrec = fftw.override { precision = "single"; };
   fftwFloat = fftwSinglePrec; # the configure option is just an alias
   fftwLongDouble = fftw.override { precision = "long-double"; };
