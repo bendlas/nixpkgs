@@ -21088,6 +21088,9 @@ with pkgs;
     ffmpegVariant = "full";
   };
 
+  v4l2-request-ffmpeg = callPackage ../development/libraries/v4l2-request-ffmpeg { };
+  v4l2-request-mpv = wrapMpv (mpv-unwrapped.override { ffmpeg = v4l2-request-ffmpeg; }) {};
+
   ffmpeg_6 = callPackage ../development/libraries/ffmpeg/6.nix {
      inherit (darwin.apple_sdk.frameworks)
       Cocoa CoreServices CoreAudio CoreMedia AVFoundation MediaToolbox
