@@ -49,6 +49,7 @@
 , vulkan-loader
 
 # Package customization:
+, extraPatches ? []
 , cupsSupport ? true, cups ? null
 , proprietaryCodecs ? true
 , pulseSupport ? false, libpulseaudio ? null
@@ -250,7 +251,7 @@ let
         sha256 = "sha256-Vryjg8kyn3cxWg3PmSwYRG6zrHOqYWBMSdEMGiaPg6M=";
         revert = true;
       })
-    ];
+    ] ++ extraPatches;
 
     postPatch = ''
       # Workaround/fix for https://bugs.chromium.org/p/chromium/issues/detail?id=1313361:

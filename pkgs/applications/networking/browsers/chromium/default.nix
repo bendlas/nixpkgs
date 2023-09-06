@@ -18,6 +18,7 @@
 , cupsSupport ? true
 , pulseSupport ? config.pulseaudio or stdenv.isLinux
 , commandLineArgs ? ""
+, extraPatches ? [ ]
 , pkgsBuildTarget
 , pkgsBuildBuild
 , pkgs
@@ -54,6 +55,7 @@ let
       inherit channel chromiumVersionAtLeast versionRange;
       inherit proprietaryCodecs
               cupsSupport pulseSupport ungoogled;
+      inherit extraPatches;
       gnChromium = buildPackages.gn.overrideAttrs (oldAttrs: {
         inherit (upstream-info.deps.gn) version;
         src = fetchgit {
