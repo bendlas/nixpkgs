@@ -21,9 +21,6 @@ let
       lan = cfg.lan;
     };
     username = cfg.username;
-    password = cfg.password;
-    token = cfg.token;
-    game_password = cfg.game-password;
     require_user_verification = cfg.requireUserVerification;
     max_upload_in_kilobytes_per_second = 0;
     minimum_latency_in_ticks = 0;
@@ -208,10 +205,31 @@ in
         type = types.nullOr types.str;
         default = null;
         description = lib.mdDoc ''
-          Authentication token. May be used instead of 'password' above.
+          Authentication token. May be used instead of 'passwordFile'.
         '';
       };
       game-password = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = lib.mdDoc ''
+          Game password.
+        '';
+      };
+      passwordFile = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = lib.mdDoc ''
+          Your factorio.com login credentials. Required for games with visibility public.
+        '';
+      };
+      tokenFile = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = lib.mdDoc ''
+          Authentication token. May be used instead of 'passwordFile'.
+        '';
+      };
+      gamePasswordFile = mkOption {
         type = types.nullOr types.str;
         default = null;
         description = lib.mdDoc ''
@@ -246,6 +264,30 @@ in
   };
 
   config = mkIf cfg.enable {
+    services.factorio.passwordFile = mkDefault (
+      if isNull cfg.password
+      then null
+      else toString (pkgs.writeTextFile {
+        name = "password-file";
+        text = warn "please use `services.factorio.passwordFile` option" cfg.password;
+      })
+    );
+    services.factorio.gamePasswordFile = mkDefault (
+      if isNull cfg.game-password
+      then null
+      else toString (pkgs.writeTextFile {
+        name = "password-file";
+        text = warn "please use `services.factorio.gamePasswordFile` option" cfg.game-password;
+      })
+    );
+    services.factorio.tokenFile = mkDefault (
+      if isNull cfg.token
+      then null
+      else toString (pkgs.writeTextFile {
+        name = "password-file";
+        text = warn "please use `services.factorio.tokenFile` option" cfg.token;
+      })
+    );
     systemd.services.factorio = {
       description   = "Factorio headless server";
       wantedBy      = [ "multi-user.target" ];
@@ -273,6 +315,9 @@ in
           "--bind=${cfg.bind}"
           (optionalString (!cfg.loadLatestSave) "--start-server=${mkSavePath cfg.saveName}")
           "--server-settings=${serverSettingsFile}"
+          (optionalString (! isNull cfg.tokenFile) "--token=$(cat ${cfg.tokenFile})")
+          (optionalString (! isNull cfg.passwordFile) "--password=$(cat ${cfg.passwordFile})")
+          (optionalString (! isNull cfg.gamePasswordFile) "--game-password=$(cat ${cfg.gamePasswordFile})")
           (optionalString cfg.loadLatestSave "--start-server-load-latest")
           (optionalString (cfg.mods != []) "--mod-directory=${modDir}")
           (optionalString (cfg.admins != []) "--server-adminlist=${serverAdminsFile}")
