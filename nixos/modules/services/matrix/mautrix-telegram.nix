@@ -24,12 +24,12 @@ in {
             software = "standard";
           };
 
-          appservice = {
+          appservice = rec {
             database = "sqlite:///${dataDir}/mautrix-telegram.db";
             database_opts = {};
             hostname = "0.0.0.0";
             port = 8080;
-            address = "http://localhost:8080";
+            address = "http://localhost:${toString port}";
           };
 
           bridge = {
