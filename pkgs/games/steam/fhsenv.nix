@@ -254,6 +254,11 @@ in buildFHSEnv rec {
     export SDL_JOYSTICK_DISABLE_UDEV=1
   '' + extraProfile;
 
+  extraBwrapArgs = [
+    "--ro-bind-try" "/tmp/.X11-unix/X0" "/tmp/.X11-unix/X0"
+    "--ro-bind-try" "/tmp/.X11-unix/X1" "/tmp/.X11-unix/X1"
+  ];
+
   runScript = writeShellScript "steam-wrapper.sh" ''
     if [ -f /host/etc/NIXOS ]; then   # Check only useful on NixOS
       ${glxinfo-i686}/bin/glxinfo >/dev/null 2>&1
