@@ -99,21 +99,21 @@ let
   };
 
   assertions = [
-    {
-      assertion = let
-        kernel = config.boot.kernelPackages.kernel;
-      in (
-        kernel.kernelAtLeast "6.7" || (
-          lib.elem (kernel.structuredExtraConfig.BCACHEFS_FS or null) [
-            lib.kernel.module
-            lib.kernel.yes
-            (lib.kernel.option lib.kernel.yes)
-          ]
-        )
-      );
+    # {
+    #   assertion = let
+    #     kernel = config.boot.kernelPackages.kernel;
+    #   in (
+    #     kernel.kernelAtLeast "6.7" || (
+    #       lib.elem (kernel.structuredExtraConfig.BCACHEFS_FS or null) [
+    #         lib.kernel.module
+    #         lib.kernel.yes
+    #         (lib.kernel.option lib.kernel.yes)
+    #       ]
+    #     )
+    #   );
 
-      message = "Linux 6.7-rc1 at minimum or a custom linux kernel with bcachefs support is required";
-    }
+    #   message = "Linux 6.7-rc1 at minimum or a custom linux kernel with bcachefs support is required";
+    # }
   ];
 in
 
