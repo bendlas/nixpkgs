@@ -26,11 +26,11 @@
 
 let rizin = stdenv.mkDerivation rec {
   pname = "rizin";
-  version = "0.6.3";
+  version = "0.7.1";
 
   src = fetchurl {
     url = "https://github.com/rizinorg/rizin/releases/download/v${version}/rizin-src-v${version}.tar.xz";
-    hash = "sha256-lfZMarnm2qnp+lY0OY649s206/LoFNouTLlp0x9FCcI=";
+    hash = "sha256-FJ3I7tQHAIm25OZQcdVfVxwNLkxy0u5CBWKiMhMIwpQ=";
   };
 
   mesonFlags = [
@@ -55,12 +55,6 @@ let rizin = stdenv.mkDerivation rec {
     # caching it. This patch replaces the entire logic to only look at
     # the env var NIX_RZ_PREFIX
     ./librz-wrapper-support.patch
-    # Fix tree-sitter 0.20.9 build failure: https://github.com/rizinorg/rizin/pull/4165
-    (fetchpatch {
-      name = "tree-sitter-0.20.9.patch";
-      url = "https://github.com/rizinorg/rizin/commit/1bb08712dbc9e062bb439a65dcebeb4221ded699.patch";
-      hash = "sha256-mE0eQAFhyxX5bwrz+S1IVl6HNV9ITQ+tRRvGLLif5VI=";
-    })
   ];
 
 
