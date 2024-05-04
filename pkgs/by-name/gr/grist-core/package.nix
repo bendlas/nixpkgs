@@ -11,6 +11,7 @@
   nodePackages,
   makeWrapper,
   gitUpdater,
+  nixosTests,
 }:
 stdenv.mkDerivation rec {
   pname = "grist-core";
@@ -68,6 +69,7 @@ stdenv.mkDerivation rec {
   passthru = {
     pythonEnv = python3.withPackages (_: propagatedBuildInputs);
     updateScript = gitUpdater { rev-prefix = "v"; };
+    tests = { inherit (nixosTests) grist-core; };
   };
 
   configurePhase = ''
