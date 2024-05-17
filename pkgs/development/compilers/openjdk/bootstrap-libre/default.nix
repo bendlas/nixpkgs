@@ -232,10 +232,12 @@ lib.makeScope newScope (self: with self; {
       classpathTool rmiregistry Main
       classpathTool native2ascii Native2ASCII
     '';
+    passthru.home = classpath_0_99;
   };
 
   icedtea_2_5_5 = pkgs.callPackage ./icedtea {
-    # bootjdk = openjdk-bootstrap;
+    bootjdk = classpath_0_99; # FIXME need to go higher in bootstrap stack
+    autoconf = pkgs.autoconf269;
   };
 
 })
