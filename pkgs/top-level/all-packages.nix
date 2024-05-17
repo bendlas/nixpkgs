@@ -4999,6 +4999,11 @@ with pkgs;
 
   gwt240 = callPackage ../development/compilers/gwt/2.4.0.nix { };
 
+  icedtea7 = callPackage ../development/compilers/icedtea rec {
+    bootjdk = openjdk-bootstrap;
+    giflib = giflib_5_0;
+  };
+
   idrisPackages = recurseIntoAttrs (
     callPackage ../development/idris-modules {
       idris-no-deps = haskellPackages.idris;
