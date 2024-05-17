@@ -16034,10 +16034,16 @@ with pkgs;
 
   gwt240 = callPackage ../development/compilers/gwt/2.4.0.nix { };
 
+
   hvm = darwin.apple_sdk_11_0.callPackage ../development/compilers/hvm { };
 
   iay = callPackage ../tools/misc/iay {
     inherit (darwin.apple_sdk.frameworks) AppKit Security Foundation Cocoa;
+  };
+
+  icedtea7 = callPackage ../development/compilers/icedtea rec {
+    bootjdk = openjdk-bootstrap;
+    giflib = giflib_5_0;
   };
 
   idrisPackages = dontRecurseIntoAttrs (callPackage ../development/idris-modules {
