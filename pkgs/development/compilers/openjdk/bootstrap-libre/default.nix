@@ -234,4 +234,8 @@ lib.makeScope newScope (self: with self; {
     '';
   };
 
+  icedtea_2_5_5 = pkgs.callPackage ./icedtea {
+    # bootjdk = openjdk-bootstrap;
+  };
+
 })
