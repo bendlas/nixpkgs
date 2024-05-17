@@ -175,10 +175,10 @@ lib.makeScope newScope (self: with self; {
       mkdir -p $out/share/java $out/bin
       cp ecj-bootstrap.jar $out/share/java
       substitute ${./ecj-javac.sh.in} $out/bin/javac \
-        --subst-var-by shell ${stdenv.shell} \
-        --subst-var-by java ${jamvm_1_5_1}/bin/jamvm \
+        --subst-var-by shell "${stdenv.shell}" \
+        --subst-var-by java "${jamvm_1_5_1}/bin/jamvm" \
         --subst-var-by ecjJar $out/share/java/ecj-bootstrap.jar \
-        --subst-var-by bootClasspath $(JARS=(${classpath_0_93}/share/classpath/{glibj.zip,tools.zip}); IFS=:; echo "''${JARS[*]}")
+        --subst-var-by bootClasspath "$(JARS=(${classpath_0_93}/share/classpath/{glibj.zip,tools.zip}); IFS=:; echo "''${JARS[*]}")"
       chmod +x $out/bin/javac
     '';
   };
@@ -216,6 +216,21 @@ lib.makeScope newScope (self: with self; {
     ];
     postInstall = ''
       make install-data
+      classpathTool() {
+        substitute ${./classpath-tool.sh.in} "$out/bin/$1" \
+          --subst-var-by shell "${stdenv.shell}" \
+          --subst-var-by java "${jamvm_1_5_1}/bin/jamvm" \
+          --subst-var out \
+          --subst-var-by toolPkg "$1" \
+          --subst-var-by mainClass "$2"
+        chmod +x "$out/bin/$1"
+      }
+      classpathTool javah Main
+      classpathTool rmic Main
+      classpathTool rmid Main
+      classpathTool orbd Main
+      classpathTool rmiregistry Main
+      classpathTool native2ascii Native2ASCII
     '';
   };
 
