@@ -3593,6 +3593,11 @@ with pkgs;
 
   dotnetPackages = recurseIntoAttrs (callPackage ./dotnet-packages.nix { });
 
+  icedtea7 = callPackage ../development/compilers/icedtea rec {
+    bootjdk = openjdk-bootstrap;
+    giflib = giflib_5_0;
+  };
+
   idrisPackages = recurseIntoAttrs (
     callPackage ../development/idris-modules {
       idris-no-deps = haskellPackages.idris;
