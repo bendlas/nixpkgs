@@ -1,7 +1,8 @@
-{ stdenv, fetchurl, jdk, ant, wget, zip, unzip, cpio, file, libxslt
-, xorg, zlib, pkgconfig, libjpeg, libpng, giflib, lcms2, gtk2, kerberos, attr
+{ stdenv, lib, fetchurl, ant, wget, zip, unzip, cpio, file, libxslt
+, xorg, zlib, pkg-config, libjpeg, libpng, giflib, lcms2, gtk2, kerberos, attr
 , alsaLib, procps, automake, autoconf, cups, which, perl, coreutils, binutils
 , cacert, setJavaClassPath
+, bootjdk
 }:
 
 let
@@ -29,7 +30,7 @@ let
 
   bundleNames = builtins.attrNames srcInfo.bundles;
 
-  sources = stdenv.lib.genAttrs bundleNames (name: defSrc name);
+  sources = lib.genAttrs bundleNames (name: defSrc name);
 
   bundleFun = name: "--with-${name}-src-zip=" + builtins.getAttr name sources;
   bundleFlags = map bundleFun bundleNames;
@@ -46,7 +47,7 @@ let
     # TODO: Probably some more dependencies should be on this list but are being
     # propagated instead
     buildInputs = [
-      jdk ant wget zip unzip cpio file libxslt pkgconfig procps automake
+      bootjdk ant wget zip unzip cpio file libxslt pkg-config procps automake
       autoconf which perl coreutils xorg.lndir
       zlib libjpeg libpng giflib lcms2 kerberos attr alsaLib cups
       xorg.libX11 xorg.libXtst gtk2
@@ -58,7 +59,7 @@ let
 
       "--without-rhino"
       "--with-pax=paxctl"
-      "--with-jdk-home=${jdk.home}"
+      "--with-jdk-home=${bootjdk.home}"
     ];
 
     preConfigure = ''
@@ -169,8 +170,8 @@ let
         - Needed for executing Java Webstart programs and the free Java web browser plugin.
       '';
       homepage = http://icedtea.classpath.org;
-      maintainers = with stdenv.lib.maintainers; [ wizeman ];
-      platforms = stdenv.lib.platforms.linux;
+      maintainers = with lib.maintainers; [ bendlas ];
+      platforms = lib.platforms.linux;
     };
 
     passthru = {
