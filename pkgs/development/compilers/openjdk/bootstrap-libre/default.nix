@@ -1,4 +1,4 @@
-{ lib, newScope, pkgs, fetchurl, fetchpatch }:
+{ lib, newScope, pkgs, fetchurl, fetchpatch, fetchzip }:
 
 lib.makeScope newScope (self: with self; {
   inherit (pkgs) stdenv
@@ -142,7 +142,81 @@ lib.makeScope newScope (self: with self; {
       # cp build.xml $out
       bash -x bootstrap.sh -Ddist.dir=$out
     '';
+    # TODO port jar repack
   };
 
+  ecj_3_2_2 = stdenv.mkDerivation rec {
+    pname = "ecj";
+    version = "3.2.2";
+    src = fetchzip {
+      stripRoot = false;
+      url = "http://archive.eclipse.org/eclipse/downloads/drops/R-${version}-200702121330/ecjsrc.zip";
+      # sha256 = "05hj82kxd23qaglsjkaqcj944riisjha7acf7h3ljhrjyljx8307";
+      # hash = "sha256-BwzUJfUyQ0kHPI6po6DUMWZCkmRYTanpU3iI1qdAEhY=";
+      hash = "sha256-Hdt/yYaZOQOV8bKIQz+xouX8iPr2eV3z6zh9R376I3o=";
+    };
+    env.CLASSPATH = "${jamvm_1_5_1}/lib/rt.jar:${
+      lib.concatStringsSep ":"
+        (map (j: "${ant_1_8_4}/lib/${j}")
+          [ "ant-antlr.jar" "ant-apache-bcel.jar" "ant-apache-bsf.jar" "ant-apache-log4j.jar"
+            "ant-apache-oro.jar" "ant-apache-regexp.jar" "ant-apache-resolver.jar" "ant-apache-xalan2.jar"
+            "ant-commons-logging.jar" "ant-commons-net.jar" "ant-jai.jar" "ant-javamail.jar" "ant-jdepend.jar"
+            "ant-jmf.jar" "ant-jsch.jar" "ant-junit.jar" "ant-junit4.jar" "ant-launcher.jar" "ant-netrexx.jar"
+            "ant-swing.jar" "ant.jar" ])}";
+    nativeBuildInputs = [ jikes_1_22 fastjar ];
+    buildPhase = ''
+      echo > manifest "Manifest-Version: 1.0
+      Main-Class: org.eclipse.jdt.internal.compiler.batch.Main
+      "
+      jikes $(find . -name "*.java")
+      fastjar cvfm ecj-bootstrap.jar manifest .
+    '';
+    installPhase = ''
+      mkdir -p $out/share/java $out/bin
+      cp ecj-bootstrap.jar $out/share/java
+      substitute ${./ecj-javac.sh.in} $out/bin/javac \
+        --subst-var-by shell ${stdenv.shell} \
+        --subst-var-by java ${jamvm_1_5_1}/bin/jamvm \
+        --subst-var-by ecjJar $out/share/java/ecj-bootstrap.jar \
+        --subst-var-by bootClasspath $(JARS=(${classpath_0_93}/share/classpath/{glibj.zip,tools.zip}); IFS=:; echo "''${JARS[*]}")
+      chmod +x $out/bin/javac
+    '';
+  };
+
+  classpath_0_99 = stdenv.mkDerivation rec {
+    pname = "classpath";
+    version = "0.99";
+    src = fetchurl {
+      url = "mirror://gnu/classpath/classpath-${version}.tar.gz";
+      sha256 = "1j7cby4k66f1nvckm48xcmh352b1d1b33qk7l6hi7dp9i9zjjagr";
+      # hash = "";
+    };
+
+    patches = [
+      (fetchpatch {
+        url = "https://git.savannah.gnu.org/cgit/guix.git/plain/gnu/packages/patches/classpath-aarch64-support.patch";
+        hash = "sha256-EI4BPE/z96Dpw7gK00ehKpWimkr1hKZBVRv/pr/tfts=";
+      })
+    ];
+    nativeBuildInputs = [ fastjar libtool pkg-config ];
+    configureFlags = [
+      "JAVAC=${ecj_3_2_2}/bin/javac"
+      "JAVA=${jamvm_1_5_1}/bin/jamvm"
+      "--with-ecj-jar=${ecj_3_2_2}/share/java/ecj-bootstrap.jar"
+      "GCJ_JAVAC_TRUE=no"
+      "ac_cv_prog_java_works=yes"
+      "--disable-Werror"
+      "--disable-gmp"
+      "--disable-gtk-peer"
+      "--disable-gconf-peer"
+      "--disable-plugin"
+      "--disable-dssi"
+      "--disable-alsa"
+      "--disable-gjdoc"
+    ];
+    postInstall = ''
+      make install-data
+    '';
+  };
 
 })
