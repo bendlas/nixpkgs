@@ -1,7 +1,8 @@
 { stdenv, lib, fetchurl, ant, wget, zip, unzip, cpio, file, libxslt
-, xorg, zlib, pkg-config, libjpeg, libpng, giflib, lcms2, gtk2, kerberos, attr
+, zlib, pkg-config, libjpeg, libpng, giflib, lcms2, gtk2, kerberos, attr
 , alsaLib, procps, automake, autoconf, cups, which, perl, coreutils, binutils
 , cacert, setJavaClassPath
+, lndir, libX11, libXtst, libXt
 , bootjdk
 }:
 
@@ -47,20 +48,29 @@ let
     # TODO: Probably some more dependencies should be on this list but are being
     # propagated instead
     buildInputs = [
-      bootjdk ant wget zip unzip cpio file libxslt pkg-config procps automake
-      autoconf which perl coreutils xorg.lndir
+      bootjdk ant wget zip unzip cpio file libxslt procps automake
+      autoconf which perl coreutils lndir
       zlib libjpeg libpng giflib lcms2 kerberos attr alsaLib cups
-      xorg.libX11 xorg.libXtst gtk2
+      libX11 libXtst gtk2 libXt
+    ];
+
+    nativeBuildInputs = [
+      pkg-config
     ];
 
     configureFlags = bundleFlags ++ [
-      "--disable-bootstrap"
+      "--enable-bootstrap"
       "--disable-downloading"
 
       "--without-rhino"
       "--with-pax=paxctl"
       "--with-jdk-home=${bootjdk.home}"
     ];
+
+    ## FIXME also need to patch some source files
+    patchPhase = ''
+      substituteInPlace acinclude.m4 --replace 'attr/xattr.h' 'sys/xattr.h'
+    '';
 
     preConfigure = ''
       unset JAVA_HOME JDK_HOME CLASSPATH JAVAC JAVACFLAGS
@@ -89,7 +99,7 @@ let
       "ALT_USRBIN_PATH="
       "ALT_DEVTOOLS_PATH="
       "ALT_COMPILER_PATH="
-      "ALT_CUPS_HEADERS_PATH=${cups}/include"
+      "ALT_CUPS_HEADERS_PATH=${cups.dev}/include"
       "ALT_OBJCOPY=${binutils}/bin/objcopy"
       "SORT=${coreutils}/bin/sort"
       "UNLIMITED_CRYPTO=1"
