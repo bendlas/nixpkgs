@@ -2,4 +2,4 @@
 
 set -eu
 
-exec @java@ -classpath @out@/share/classpath/tools.zip gnu.classpath.tools.@toolPkg@.@mainClass@ "$@"
+exec @java@ -classpath @classpath@/share/classpath/tools.zip gnu.classpath.tools.@toolPkg@.@mainClass@ "$@"
