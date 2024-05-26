@@ -216,28 +216,45 @@ lib.makeScope newScope (self: with self; {
     ];
     postInstall = ''
       make install-data
+    '';
+  };
+
+  jdk5_jamvm_classpath = pkgs.runCommand "jdk5-jamvm-classpath" {
+    passthru.home = jdk5_jamvm_classpath;
+  } ''
       classpathTool() {
         substitute ${./classpath-tool.sh.in} "$out/bin/$1" \
           --subst-var-by shell "${stdenv.shell}" \
           --subst-var-by java "${jamvm_1_5_1}/bin/jamvm" \
-          --subst-var out \
+          --subst-var-by classpath "${classpath_0_99}" \
           --subst-var-by toolPkg "$1" \
           --subst-var-by mainClass "$2"
         chmod +x "$out/bin/$1"
       }
+      mkdir -p $out/bin $out/lib $out/jre/lib
       classpathTool javah Main
       classpathTool rmic Main
       classpathTool rmid Main
       classpathTool orbd Main
       classpathTool rmiregistry Main
       classpathTool native2ascii Native2ASCII
-    '';
-    passthru.home = classpath_0_99;
-  };
+      ln -s ${jamvm_1_5_1}/bin/jamvm $out/bin/java
+      ln -s ${ecj_3_2_2}/bin/javac $out/bin/javac
+      ln -s ${fastjar}/bin/fastjar $out/bin/jar
+      ln -s ${ecj_3_2_2}/lib/tools.zip $out/lib/tools.jar
+      ln -s ${classpath_0_99}/share/classpath/glibj.zip $out/jre/lib/rt.jar
+  '';
 
-  icedtea_2_5_5 = pkgs.callPackage ./icedtea {
-    bootjdk = classpath_0_99; # FIXME need to go higher in bootstrap stack
+  inherit (pkgs) fetchurl lib wget cpio file libxslt procps which perl
+    coreutils binutils cacert libjpeg libpng giflib lcms2
+    kerberos attr alsaLib cups gtk2 setJavaClassPath;
+
+  inherit (pkgs.xorg) libX11 libXtst lndir libXt;
+
+  icedtea_2_5_5 = lib.callPackageWith self ./icedtea {
+    bootjdk = jdk5_jamvm_classpath;
     autoconf = pkgs.autoconf269;
+    ant = ant_1_8_4;
   };
 
 })
