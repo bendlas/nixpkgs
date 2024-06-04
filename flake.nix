@@ -112,5 +112,16 @@
         */
         readOnlyPkgs = ./nixos/modules/misc/nixpkgs/read-only.nix;
       };
+
+      apps = forAllSystems (system: {
+        timestamp-upstream = {
+          type = "app";
+          program = toString (self.legacyPackages.${system}.writeShellScript "timestamp-upstream" ''
+            set -euo pipefail
+            git fetch origin main
+            git push origin FETCH_HEAD:refs/heads/main-$(date -I)
+          '');
+        };
+      });
     };
 }
