@@ -112,5 +112,26 @@
         */
         readOnlyPkgs = ./nixos/modules/misc/nixpkgs/read-only.nix;
       };
+
+      apps = forAllSystems (system: {
+        push-origin-after-rebase = {
+          type = "app";
+          program = toString (self.legacyPackages.${system}.writeShellScript "push-origin-after-rebase" ''
+            set -euo pipefail
+            set -x
+            ${self.apps.${system}.timestamp-origin.program}
+            git push --force-with-lease origin main
+          '');
+        };
+        timestamp-origin = {
+          type = "app";
+          program = toString (self.legacyPackages.${system}.writeShellScript "timestamp-origin" ''
+            set -euo pipefail
+            set -x
+            git fetch origin main
+            git push origin FETCH_HEAD:refs/heads/main-$(date -I)
+          '');
+        };
+      });
     };
 }
