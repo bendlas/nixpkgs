@@ -14,6 +14,7 @@ lib.makeScope newScope (self: with self; {
       # sha256 = "1qqldrp74pzpy5ly421srqn30qppmm9cvjiqdngk8hf47dv2rc0c";
       hash = "sha256-DLAsdjvEQTSfbTjKzVKt92IwLM46COJp8fdfcm5uFOM=";
     };
+    enableParallelBuilding = true;
   };
 
   classpath_0_93 = stdenv.mkDerivation rec {
@@ -49,6 +50,7 @@ lib.makeScope newScope (self: with self; {
       "--disable-alsa"
       "--disable-gjdoc"
     ];
+    enableParallelBuilding = true;
     postInstall = ''
       make install-data
     '';
@@ -88,6 +90,7 @@ lib.makeScope newScope (self: with self; {
     ];
     nativeBuildInputs = [ autoconf automake libtool zip ];
     buildInputs = [  jikes_1_22 classpath_0_93 zlib libffi ];
+    enableParallelBuilding = true;
     # dontStrip = true;
     separateDebugInfo = true;
   };
@@ -142,6 +145,7 @@ lib.makeScope newScope (self: with self; {
       # cp build.xml $out
       bash -x bootstrap.sh -Ddist.dir=$out
     '';
+    enableParallelBuilding = true;
     # TODO port jar repack
   };
 
@@ -199,6 +203,7 @@ lib.makeScope newScope (self: with self; {
       })
     ];
     nativeBuildInputs = [ fastjar libtool pkg-config ];
+    enableParallelBuilding = true;
     configureFlags = [
       "JAVAC=${ecj_3_2_2}/bin/javac"
       "JAVA=${jamvm_1_5_1}/bin/jamvm"
@@ -251,7 +256,7 @@ lib.makeScope newScope (self: with self; {
 
   inherit (pkgs.xorg) libX11 libXtst lndir libXt;
 
-  icedtea_2_5_5 = lib.callPackageWith self ./icedtea {
+  icedtea_7 = lib.callPackageWith self ./icedtea {
     bootjdk = jdk5_jamvm_classpath;
     autoconf = pkgs.autoconf269;
     ant = ant_1_8_4;
