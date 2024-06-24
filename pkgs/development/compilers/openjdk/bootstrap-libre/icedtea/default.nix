@@ -62,6 +62,13 @@ let
       "--enable-bootstrap"
       "--disable-downloading"
 
+      "--disable-system-sctp"
+      "--disable-system-pcsc"
+      # "--enable-system-lcms"
+      # "--enable-nss"
+
+      "--disable-tests" # TODO run in check phase instead
+
       "--without-rhino"
       "--with-pax=paxctl"
       "--with-jdk-home=${bootjdk.home}"
@@ -78,14 +85,17 @@ let
       substituteInPlace javac.in --replace '#!/usr/bin/perl' '#!${perl}/bin/perl'
       substituteInPlace javah.in --replace '#!/usr/bin/perl' '#!${perl}/bin/perl'
 
+      export configureFlags="$configureFlags --with-parallel-jobs=$NIX_BUILD_CORES"
       ./autogen.sh
+      substituteInPlace openjdk/jdk/make/common/shared/Sanity.gmk \
+        --replace 'ALSA_INCLUDE=/usr/include/alsa/version.h' 'ALSA_INCLUDE=${alsaLib}/include/alsa/version.h'
     '';
 
     preBuild = ''
       make stamps/extract.stamp
 
-      substituteInPlace openjdk/jdk/make/common/shared/Defs-utils.gmk --replace '/bin/echo' '${coreutils}/bin/echo'
       substituteInPlace openjdk/corba/make/common/shared/Defs-utils.gmk --replace '/bin/echo' '${coreutils}/bin/echo'
+      substituteInPlace openjdk/jdk/make/common/shared/Defs-utils.gmk --replace '/bin/echo' '${coreutils}/bin/echo'
 
       patch -p0 < ${./cppflags-include-fix.patch}
       patch -p0 < ${./fix-java-home.patch}
@@ -93,6 +103,7 @@ let
 
     NIX_NO_SELF_RPATH = true;
 
+    enableParallelBuilding = true;
     makeFlags = [
       "ALSA_INCLUDE=${alsaLib}/include/alsa/version.h"
       "ALT_UNIXCOMMAND_PATH="
