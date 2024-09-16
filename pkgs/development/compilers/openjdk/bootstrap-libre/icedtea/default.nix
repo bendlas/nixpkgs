@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, ant, wget, zip, unzip, cpio, file, libxslt
+{ stdenv, lib, fetchFromGitHub, ant, wget, zip, unzip, cpio, file, libxslt
 , zlib, pkg-config, libjpeg, libpng, giflib, lcms2, gtk2, kerberos, attr
 , alsaLib, procps, automake, autoconf, cups, which, perl, coreutils, binutils
 , cacert, setJavaClassPath
@@ -7,6 +7,21 @@
 }:
 
 let
+
+  icedteaSrc = fetchFromGitHub {
+    owner = "icedtea-git";
+    repo = "icedtea";
+    rev = "icedtea-2.6.28";
+    hash = "sha256-2XyAQmiK9YKpvgPKl11ratjSgNEE453jHyiWox0oyAk=";
+  };
+
+  jdkSrc = fetchFromGitHub {
+    owner = "openjdk";
+    repo = "jdk7u";
+    rev = "jdk7u351-ga";
+    hash = "sha256-m/5s/rJEu8e3Biz1HnNWjs5OPHPjIyu5gp10uBgwzUA=";
+  };
+
 
   /**
    * The JRE libraries are in directories that depend on the CPU.
@@ -19,29 +34,10 @@ let
     else
       throw "icedtea requires i686-linux or x86_64 linux";
 
-  srcInfo = (import ./sources.nix).icedtea7;
+  icedtea = stdenv.mkDerivation {
 
-  pkgName = "icedtea7-${srcInfo.version}";
-
-  defSrc = name:
-    with (builtins.getAttr name srcInfo.bundles); fetchurl {
-      inherit url sha256;
-      name = "${pkgName}-${baseNameOf url}";
-    };
-
-  bundleNames = builtins.attrNames srcInfo.bundles;
-
-  sources = lib.genAttrs bundleNames (name: defSrc name);
-
-  bundleFun = name: "--with-${name}-src-zip=" + builtins.getAttr name sources;
-  bundleFlags = map bundleFun bundleNames;
-
-  icedtea = stdenv.mkDerivation (with srcInfo; {
-    name = pkgName;
-
-    src = fetchurl {
-      inherit url sha256;
-    };
+    name = icedteaSrc.rev;
+    src = icedteaSrc;
 
     outputs = [ "out" "jre" ];
 
@@ -58,7 +54,7 @@ let
       pkg-config
     ];
 
-    configureFlags = bundleFlags ++ [
+    configureFlags = [
       "--enable-bootstrap"
       "--disable-downloading"
 
@@ -72,23 +68,18 @@ let
       "--without-rhino"
       "--with-pax=paxctl"
       "--with-jdk-home=${bootjdk.home}"
+      "--with-openjdk-src-dir=${jdkSrc}"
+
     ];
 
     ## FIXME also need to patch some source files
-    patchPhase = ''
+    postPatch = ''
       substituteInPlace acinclude.m4 --replace 'attr/xattr.h' 'sys/xattr.h'
     '';
 
     preConfigure = ''
-      unset JAVA_HOME JDK_HOME CLASSPATH JAVAC JAVACFLAGS
-
-      substituteInPlace javac.in --replace '#!/usr/bin/perl' '#!${perl}/bin/perl'
-      substituteInPlace javah.in --replace '#!/usr/bin/perl' '#!${perl}/bin/perl'
-
       export configureFlags="$configureFlags --with-parallel-jobs=$NIX_BUILD_CORES"
       ./autogen.sh
-      substituteInPlace openjdk/jdk/make/common/shared/Sanity.gmk \
-        --replace 'ALSA_INCLUDE=/usr/include/alsa/version.h' 'ALSA_INCLUDE=${alsaLib}/include/alsa/version.h'
     '';
 
     preBuild = ''
@@ -100,6 +91,10 @@ let
       patch -p0 < ${./cppflags-include-fix.patch}
       patch -p0 < ${./fix-java-home.patch}
     '';
+
+    patches = [
+      # ./0001-make-jpeg-6b-optional.patch
+    ];
 
     NIX_NO_SELF_RPATH = true;
 
@@ -199,5 +194,5 @@ let
       inherit architecture;
       home = "${icedtea}/lib/icedtea";
     };
-  });
+  };
 in icedtea
