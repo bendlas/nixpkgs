@@ -250,14 +250,15 @@ lib.makeScope newScope (self: with self; {
       ln -s ${classpath_0_99}/share/classpath/glibj.zip $out/jre/lib/rt.jar
   '';
 
-  inherit (pkgs) fetchurl lib wget cpio file libxslt procps which perl
+  inherit (pkgs) fetchFromGitHub lib wget cpio file libxslt procps which perl
     coreutils binutils cacert libjpeg libpng giflib lcms2
     kerberos attr alsaLib cups gtk2 setJavaClassPath;
 
   inherit (pkgs.xorg) libX11 libXtst lndir libXt;
 
-  icedtea_7 = lib.callPackageWith self ./icedtea {
+  icedtea_2_6 = lib.callPackageWith self ./icedtea {
     bootjdk = jdk5_jamvm_classpath;
+    # bootjdk = pkgs.jdk8;
     autoconf = pkgs.autoconf269;
     ant = ant_1_8_4;
   };
