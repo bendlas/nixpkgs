@@ -1,12 +1,14 @@
-{ fetchurl, lib, stdenv, ncompress, libX11 }:
+{ fetchFromGitHub, lib, stdenv, ncompress, libX11 }:
 
 stdenv.mkDerivation rec {
   pname = "stalin";
-  version = "0.11";
+  version = "0.12-unstable-2020-09-27";
 
-  src = fetchurl {
-    url = "ftp://ftp.ecn.purdue.edu/qobi/stalin.tar.Z";
-    sha256 = "0lz8riccpigdixwf6dswwva6s4kxaz3dzxhkqhcxgwmffy30vw8s";
+  src = fetchFromGitHub {
+    owner = "barak";
+    repo = "stalin";
+    rev = "351282466006515ae0a33467e51588ced042022b";
+    hash = "sha256-GoR2+9W7DQODO9/n0sWubjUbJh8XlOYNgqCXdOra7b8=";
   };
 
   buildInputs = [ ncompress libX11 ];
@@ -36,7 +38,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage = "http://www.ece.purdue.edu/~qobi/software.html";
+    homepage = "https://github.com/barak/stalin";
     license = lib.licenses.gpl2Plus;
     description = "Optimizing Scheme compiler";
 
