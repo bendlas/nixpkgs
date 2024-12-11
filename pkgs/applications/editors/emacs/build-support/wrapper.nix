@@ -200,11 +200,6 @@ runCommand
         --subst-var-by wrapperSiteLispNative "$deps/share/emacs/native-lisp" \
         --subst-var prog
       chmod +x $out/bin/$progname
-      # Create a “NOP” binary wrapper for the pure sake of it becoming a
-      # non-shebang, actual binary. See the makeBinaryWrapper docs for rationale
-      # (summary: it allows you to use emacs as a shebang itself on Darwin,
-      # e.g. #!$ {emacs}/bin/emacs --script)
-      wrapProgramBinary $out/bin/$progname
     done
 
     # Wrap MacOS app
