@@ -13,7 +13,6 @@ let
     ${cfg.loadScript}
   '';
   packages = epkgs: cfg.extraPackages epkgs ++ [ epkgs.exwm ];
-  exwm-emacs = cfg.package.pkgs.withPackages packages;
 in
 {
 
@@ -26,6 +25,14 @@ in
   options = {
     services.xserver.windowManager.exwm = {
       enable = mkEnableOption "exwm";
+      emacsPkg = mkOption {
+        type = types.package;
+        default = pkgs.emacs.pkgs.withPackages packages;
+        defaultText = "pkgs.emacs.pkgs.withPackages (...)";
+        description = ''
+          EXWM emacs package
+        '';
+      };
       loadScript = mkOption {
         default = "(require 'exwm)";
         type = types.lines;
@@ -66,9 +73,9 @@ in
     services.xserver.windowManager.session = singleton {
       name = "exwm";
       start = ''
-        ${exwm-emacs}/bin/emacs -l ${loadScript}
+        ${cfg.emacsPkg}/bin/emacs -l ${loadScript}
       '';
     };
-    environment.systemPackages = [ exwm-emacs ];
+    environment.systemPackages = [ cfg.emacsPkg ];
   };
 }
