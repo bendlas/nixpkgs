@@ -19,6 +19,7 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   nativeBuildInputs = [ cmake ];
+  # FIXME: What's the correct way to set this?
   env.ROCM_LIBPATCH_VERSION = "60300";
   env.BUILD_ID = "nixos-${finalAttrs.env.ROCM_LIBPATCH_VERSION}";
   env.ROCM_BUILD_ID = "release-${finalAttrs.env.BUILD_ID}";

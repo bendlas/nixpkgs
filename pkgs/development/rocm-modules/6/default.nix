@@ -156,7 +156,6 @@ lib.makeScope newScope (
         rocm-device-libs
         roctracer
         rocdbgapi
-        hsa-amd-aqlprofile-bin
         ;
       inherit (llvm) clang;
     };

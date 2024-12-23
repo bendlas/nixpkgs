@@ -60,6 +60,7 @@ stdenv.mkDerivation (finalAttrs: {
     #   hash = "sha256-cC030zVGS4kNXwaztv5cwfXfVwOldpLGV9iYgEfPEnY=";
     #   stripLen = 1;
     # })
+    ./remove-hsa-aqlprofile-dep.patch
   ];
 
   postPatch = ''

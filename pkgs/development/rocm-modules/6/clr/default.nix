@@ -42,8 +42,11 @@ let
     "--set HSA_PATH ${rocm-runtime}"
     "--set ROCM_PATH $out"
   ];
-  ROCM_LIBPATCH_VERSION = "60300";
-  amdclang = writeShellScriptBin "amdclang++" ''
+  ROCM_LIBPATCH_VERSION = rocm-core.ROCM_LIBPATCH_VERSION;
+  amdclang = writeShellScriptBin "amdclang" ''
+    exec clang "$@"
+  '';
+  amdclangxx = writeShellScriptBin "amdclang++" ''
     exec clang++ "$@"
   '';
 in
@@ -63,8 +66,6 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-wo3kwk6HQJsP+ycaVh2mmMjEgGlj/Z6KXNXOXbJ1KLs=";
   };
 
-  # env.ROCM_LIBPATCH_VERSION = ROCM_LIBPATCH_VERSION;
-
   nativeBuildInputs = [
     makeWrapper
     cmake
@@ -72,6 +73,7 @@ stdenv.mkDerivation (finalAttrs: {
     python3Packages.python
     python3Packages.cppheaderparser
     amdclang
+    amdclangxx
   ];
 
   buildInputs = [
@@ -171,12 +173,12 @@ stdenv.mkDerivation (finalAttrs: {
       --replace-fail "HIP_ALWAYS_USE_NEW_COMGR_UNBUNDLING_ACTION, false" "HIP_ALWAYS_USE_NEW_COMGR_UNBUNDLING_ACTION, true"
   '';
 
-  # FIXME: amdclang/amdclang++ need to be present for ROCm 6.3!
   postInstall = ''
     chmod +x $out/bin/*
     patchShebangs $out/bin
 
     cp ${amdclang}/bin/* $out/bin/
+    cp ${amdclangxx}/bin/* $out/bin/
 
     wrapProgram $out/bin/hipcc ${lib.concatStringsSep " " wrapperArgs}
     wrapProgram $out/bin/hipconfig ${lib.concatStringsSep " " wrapperArgs}
@@ -206,10 +208,6 @@ stdenv.mkDerivation (finalAttrs: {
     export ROCM_LIBPATCH_VERSION="${ROCM_LIBPATCH_VERSION}"
     export HSA_PATH="${rocm-runtime}"' > $out/nix-support/setup-hook
 
-    ln -s ${stdenv.cc}/bin/clang{,++} $out/bin/
-    # wrapProgram $out/bin/clang++ ${lib.concatStringsSep " " wrapperArgs}
-    # wrapProgram $out/bin/clang ${lib.concatStringsSep " " wrapperArgs}
-
     # Just link rocminfo, it's easier
     ln -s ${rocminfo}/bin/* $out/bin
     ln -s ${rocm-core}/include/* $out/include/
@@ -219,8 +217,7 @@ stdenv.mkDerivation (finalAttrs: {
     echo "$out/lib/libamdocl64.so" > $icd/etc/OpenCL/vendors/amdocl64.icd
 
     # add version info to output (downstream rocmPackages look for this)
-    mkdir $out/.info
-    echo "${finalAttrs.version}" > $out/.info/version
+    ln -s ${rocm-core}/.info/ $out/.info
 
     ln -s ${hipClangPath} $out/llvm
   '';

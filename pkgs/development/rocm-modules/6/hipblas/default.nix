@@ -88,8 +88,8 @@ stdenv.mkDerivation (finalAttrs: {
   cmakeFlags =
     [
       "-DCMAKE_BUILD_TYPE=Release"
-      #"-DCMAKE_C_COMPILER=${lib.getBin clr}/bin/clang"
       "-DCMAKE_CXX_COMPILER=${lib.getBin clr}/bin/hipcc"
+      # Upstream is migrating to amdclang++, it is likely this will be correct in next version bump
       #"-DCMAKE_CXX_COMPILER=${lib.getBin clr}/bin/amdclang++"
       # Manually define CMAKE_INSTALL_<DIR>
       # See: https://github.com/NixOS/nixpkgs/pull/197838

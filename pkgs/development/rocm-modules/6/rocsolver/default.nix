@@ -16,7 +16,7 @@
   buildTests ? false,
   buildBenchmarks ? false,
   #, gpuTargets ? ["gfx908:xnack-;gfx90a:xnack-;gfx90a:xnack+;gfx942;gfx1030;gfx1100;gfx1101"]
-  gpuTargets ? [ "gfx908;gfx1030;gfx1100" ],
+  gpuTargets ? [ ],
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -40,14 +40,6 @@ stdenv.mkDerivation (finalAttrs: {
     rev = "rocm-${finalAttrs.version}";
     hash = "sha256-+sGU+0CB48iolJSyYo+xH36q5LCUp+nKtOYbguzMuhg=";
   };
-  # env.CFLAGS = "-fsanitize=undefined";
-  # env.CXXFLAGS = "-fsanitize=undefined";
-
-  # FIXME: this is needed so build doesn't time out. multi job clang invocations for offload builds
-  # take forever and only output anything between arches with -v on
-  # FIXME: hits https://github.com/amcamd/Tensile/blob/35aad0223ca68d1005639107362a3a780c732f8f/Tensile/SolutionStructs.py#L1844
-  # env.NIX_CFLAGS_COMPILE = "-v";
-  # env.NIX_CXXFLAGS_COMPILE = "-v";
 
   nativeBuildInputs =
     [
@@ -62,10 +54,9 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs =
     [
-      # FIXME:
-      # rocblas and rocsolver can't build in parallel
-      # but rocsolver doesn't need rocblas' offload builds at runtime
-      # could build against a rocblas-minimal?
+      # FIXME: rocblas and rocsolver can't build in parallel
+      # but rocsolver doesn't need rocblas' offload builds at build time
+      # could we build against a rocblas-minimal?
       rocblas
       rocprim
       rocsparse

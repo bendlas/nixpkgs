@@ -6,6 +6,7 @@
   cmake,
   rocm-cmake,
   rocm-smi,
+  rocm-core,
   clr,
   mscclpp,
   perl,
@@ -71,7 +72,6 @@ stdenv.mkDerivation (finalAttrs: {
       rocprofiler
       rocprofiler-register
       mscclpp
-      # msccl # FIXME: optional dep for 6.3.0+
     ]
     ++ lib.optionals buildTests [
       chrpath
@@ -84,8 +84,8 @@ stdenv.mkDerivation (finalAttrs: {
       "-DROCM_PATH=${clr}"
       "-DHIP_COMPILER=${clr}/bin/amdclang++"
       "-DCMAKE_CXX_COMPILER=${clr}/bin/amdclang++"
-      "-DROCM_PATCH_VERSION=60300" # FIXME: get from versin
-      "-DROCM_VERSION=60300"
+      "-DROCM_PATCH_VERSION=${rocm-core.ROCM_LIBPATCH_VERSION}" # FIXME: get from versin
+      "-DROCM_VERSION=${rocm-core.ROCM_LIBPATCH_VERSION}"
       "-DBUILD_BFD=OFF" # Can't get it to detect bfd.h
       "-DENABLE_MSCCL_KERNEL=ON"
       "-DENABLE_MSCCLPP=ON"
