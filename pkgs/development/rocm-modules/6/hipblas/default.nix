@@ -7,10 +7,14 @@
   rocm-cmake,
   clr,
   gfortran,
+  hipblas-common,
   rocblas,
   rocsolver,
+  rocsparse,
+  rocprim,
   gtest,
   lapack-reference,
+  writeShellScriptBin,
   buildTests ? false,
   buildBenchmarks ? false,
   buildSamples ? false,
@@ -19,7 +23,9 @@
 # Can also use cuBLAS
 stdenv.mkDerivation (finalAttrs: {
   pname = "hipblas";
-  version = "6.0.2";
+  version = "6.3.1";
+  env.NIX_DEBUG = 1;
+  env.NIX_DISABLE_WRAPPER_INCLUDES = 1;
 
   outputs =
     [
@@ -39,20 +45,34 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "ROCm";
     repo = "hipBLAS";
     rev = "rocm-${finalAttrs.version}";
-    hash = "sha256-Fq7o2sMmHlHIv9UKJw+u/h9K/ZhKVJWwosYTdYIsscA=";
+    #rev = "a4b23dec749d9d623f0e7699045f381ec3eddfab";
+    hash = "sha256-Rz1KAhBUbvErHTF2PM1AkVhqo4OHldfSNMSpp5Tx9yk=";
   };
+
+  postPatch = ''
+    substituteInPlace library/CMakeLists.txt \
+      --replace-fail "find_package(Git REQUIRED)" ""
+  '';
 
   nativeBuildInputs = [
     cmake
+    #ninja
     rocm-cmake
     clr
     gfortran
+    (writeShellScriptBin "amdclang++" ''
+      exec clang++ "$@"
+    '')
   ];
 
   buildInputs =
     [
       rocblas
+      rocprim
+      rocsparse
       rocsolver
+      # hipblaslt
+      hipblas-common
     ]
     ++ lib.optionals buildTests [
       gtest
@@ -61,15 +81,22 @@ stdenv.mkDerivation (finalAttrs: {
       lapack-reference
     ];
 
+  dontStrip = true;
+  env.CFLAGS = "-g1 -gz";
+  env.CXXFLAGS = "-g1 -gz";
+
   cmakeFlags =
     [
-      "-DCMAKE_C_COMPILER=hipcc"
-      "-DCMAKE_CXX_COMPILER=hipcc"
+      "-DCMAKE_BUILD_TYPE=Release"
+      #"-DCMAKE_C_COMPILER=${lib.getBin clr}/bin/clang"
+      "-DCMAKE_CXX_COMPILER=${lib.getBin clr}/bin/hipcc"
+      #"-DCMAKE_CXX_COMPILER=${lib.getBin clr}/bin/amdclang++"
       # Manually define CMAKE_INSTALL_<DIR>
       # See: https://github.com/NixOS/nixpkgs/pull/197838
       "-DCMAKE_INSTALL_BINDIR=bin"
       "-DCMAKE_INSTALL_LIBDIR=lib"
       "-DCMAKE_INSTALL_INCLUDEDIR=include"
+      "-DAMDGPU_TARGETS=${rocblas.amdgpu_targets}" # FIXME:
     ]
     ++ lib.optionals buildTests [
       "-DBUILD_CLIENTS_TESTS=ON"
@@ -100,8 +127,8 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru.updateScript = rocmUpdateScript {
     name = finalAttrs.pname;
-    owner = finalAttrs.src.owner;
-    repo = finalAttrs.src.repo;
+    inherit (finalAttrs.src) owner;
+    inherit (finalAttrs.src) repo;
   };
 
   meta = with lib; {
@@ -110,8 +137,5 @@ stdenv.mkDerivation (finalAttrs: {
     license = with licenses; [ mit ];
     maintainers = teams.rocm.members;
     platforms = platforms.linux;
-    broken =
-      versions.minor finalAttrs.version != versions.minor stdenv.cc.version
-      || versionAtLeast finalAttrs.version "7.0.0";
   };
 })

@@ -19,14 +19,14 @@
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  version = "6.0.2";
+  version = "6.3.1";
   pname = "rocminfo";
 
   src = fetchFromGitHub {
     owner = "ROCm";
     repo = "rocminfo";
     rev = "rocm-${finalAttrs.version}";
-    sha256 = "sha256-k0QeCyQcarGbAh4ft8Y7JBK6l2nWxDUc20XoYmtrMMs=";
+    sha256 = "sha256-TL57Mznq5qPorDON0EaINBCoEFMN4dcAmRfRgS//nok=";
   };
 
   nativeBuildInputs = [
@@ -49,8 +49,8 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru.updateScript = rocmUpdateScript {
     name = finalAttrs.pname;
-    owner = finalAttrs.src.owner;
-    repo = finalAttrs.src.repo;
+    inherit (finalAttrs.src) owner;
+    inherit (finalAttrs.src) repo;
   };
 
   meta = with lib; {
@@ -59,9 +59,5 @@ stdenv.mkDerivation (finalAttrs: {
     license = licenses.ncsa;
     maintainers = with maintainers; [ lovesegfault ] ++ teams.rocm.members;
     platforms = platforms.linux;
-    broken =
-      stdenv.hostPlatform.isAarch64
-      || versions.minor finalAttrs.version != versions.minor stdenv.cc.version
-      || versionAtLeast finalAttrs.version "7.0.0";
   };
 })
