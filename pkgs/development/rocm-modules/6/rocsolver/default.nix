@@ -15,7 +15,18 @@
   lapack-reference,
   buildTests ? false,
   buildBenchmarks ? false,
-  gpuTargets ? [ ],
+  gpuTargets ? [
+    "gfx900"
+    "gfx906"
+    "gfx908"
+    "gfx90a"
+    "gfx942"
+    "gfx1010"
+    "gfx1030"
+    "gfx1100"
+    "gfx1101"
+    "gfx1102"
+  ],
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -68,13 +79,15 @@ stdenv.mkDerivation (finalAttrs: {
       lapack-reference
     ];
 
-  dontStrip = true;
-  env.CFLAGS = "-O3 -DNDEBUG -g1 -gz -Wno-switch";
-  env.CXXFLAGS = "-O3 -DNDEBUG -g1 -gz -Wno-switch";
+  # Reduce parallelism of build to account for internal parallelism from HIP_CLANG_NUM_PARALLEL_JOBS
+  preConfigure = ''
+    export NIX_BUILD_CORES=$((1 + NIX_BUILD_CORES/10))
+    makeFlagsArray+=("-l$(nproc)")
+  '';
   cmakeFlags =
     [
+      "-DHIP_CLANG_NUM_PARALLEL_JOBS=10"
       "-DCMAKE_BUILD_TYPE=Release"
-      "--log-level=debug"
       "-DCMAKE_VERBOSE_MAKEFILE=ON"
       # Manually define CMAKE_INSTALL_<DIR>
       # See: https://github.com/NixOS/nixpkgs/pull/197838
