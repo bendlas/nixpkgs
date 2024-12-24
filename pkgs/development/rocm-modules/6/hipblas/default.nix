@@ -24,8 +24,6 @@
 stdenv.mkDerivation (finalAttrs: {
   pname = "hipblas";
   version = "6.3.1";
-  env.NIX_DEBUG = 1;
-  env.NIX_DISABLE_WRAPPER_INCLUDES = 1;
 
   outputs =
     [

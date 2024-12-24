@@ -15,8 +15,7 @@
   python3Packages,
   buildTests ? false,
   buildBenchmarks ? false, # Seems to depend on tests
-  #, gpuTargets ? ["gfx908:xnack-;gfx90a:xnack-;gfx90a:xnack+;gfx942;gfx1030;gfx1100;gfx1101"]
-  gpuTargets ? [ "gfx908;gfx1030;gfx1100" ],
+  gpuTargets ? clr.gpuTargets,
 }:
 
 stdenv.mkDerivation (finalAttrs: {

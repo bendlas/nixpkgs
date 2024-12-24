@@ -14,9 +14,7 @@
   gtest,
   openmp,
   rocrand,
-  gpuTargets ? [
-    "gfx908;gfx1030;gfx1100"
-  ],
+  gpuTargets ? clr.gpuTargets,
 }:
 
 stdenv.mkDerivation (finalAttrs: {

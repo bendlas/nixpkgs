@@ -84,7 +84,7 @@ stdenv.mkDerivation (finalAttrs: {
       "-DROCM_PATH=${clr}"
       "-DHIP_COMPILER=${clr}/bin/amdclang++"
       "-DCMAKE_CXX_COMPILER=${clr}/bin/amdclang++"
-      "-DROCM_PATCH_VERSION=${rocm-core.ROCM_LIBPATCH_VERSION}" # FIXME: get from versin
+      "-DROCM_PATCH_VERSION=${rocm-core.ROCM_LIBPATCH_VERSION}"
       "-DROCM_VERSION=${rocm-core.ROCM_LIBPATCH_VERSION}"
       "-DBUILD_BFD=OFF" # Can't get it to detect bfd.h
       "-DENABLE_MSCCL_KERNEL=ON"
@@ -107,8 +107,8 @@ stdenv.mkDerivation (finalAttrs: {
   makeFlags = [ "-l32" ];
 
   env.CCC_OVERRIDE_OPTIONS = "+-parallel-jobs=6";
-  env.CFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing -gz -g1 ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer -DROCM_VERSION=60300";
-  env.CXXFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing -gz -g1 ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer -DROCM_VERSION=60300";
+  env.CFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing -gz -g1 ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer";
+  env.CXXFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing -gz -g1 ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer";
   env.LDFLAGS = "${san}";
   postPatch = ''
     patchShebangs src tools

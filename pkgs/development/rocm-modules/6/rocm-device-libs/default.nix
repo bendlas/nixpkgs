@@ -49,11 +49,6 @@ stdenv.mkDerivation (finalAttrs: {
   dontStrip = true;
   env.CFLAGS = "-g1 -gz";
   env.CXXFLAGS = "-g1 -gz";
-  # env.NIX_DEBUG = 1;
-  # env.CFLAGS = "-g1 -fsanitize=undefined";
-  # env.CXXFLAGS = "-g1 -fsanitize=undefined";
-  # env.NIX_CFLAGS_COMPILE = "-g1";
-  # env.NIX_CXXFLAGS_COMPILE = "-g1";
 
   cmakeFlags = [
     "-DCMAKE_RELEASE_TYPE=Release"

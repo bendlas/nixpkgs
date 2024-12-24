@@ -39,6 +39,8 @@
     "gfx908"
     "gfx90a"
     "gfx942"
+    "gfx1030"
+    "gfx1100"
   ], # clr.gpuTargets
   buildDocs ? false, # Needs internet because of rocm-docs-core
   buildTests ? false,

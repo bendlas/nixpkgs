@@ -25,7 +25,16 @@
   buildTests ? false,
   buildBenchmarks ? false,
   buildSamples ? false,
-  gpuTargets ? [ "gfx908" ], # [  ]
+  # hipblaslt supports only devices with MFMA or WMMA
+  # WMMA on gfx1100 may be broken
+  # MFMA on MI100 may be broken
+  # MI200/MI300 known to work
+  gpuTargets ? [
+    "gfx908"
+    "gfx90a"
+    "gfx942"
+    "gfx1100"
+  ],
 }:
 
 stdenv.mkDerivation (
@@ -62,14 +71,11 @@ stdenv.mkDerivation (
     env.CXXFLAGS = cFlags;
     env.ROCM_PATH = "${clr}";
     env.TENSILE_ROCM_ASSEMBLER_PATH = "${clang-sysrooted}/bin/clang++";
-    env.NIX_CC_USE_RESPONSE_FILE = 0;
-    env.NIX_DISABLE_WRAPPER_INCLUDES = 1;
     env.TENSILE_GEN_ASSEMBLY_TOOLCHAIN = "${clang-sysrooted}/bin/clang++";
     requiredSystemFeatures = [ "big-parallel" ];
 
     patches = [
       ./ext-op-first.diff
-      # ./alpha_1_init_fix.patch # libcxx bug workaround -
     ];
 
     outputs =

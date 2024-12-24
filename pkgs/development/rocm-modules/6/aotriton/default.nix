@@ -33,7 +33,13 @@
   buildTests ? false,
   buildBenchmarks ? false,
   buildSamples ? false,
-  gpuTargets ? [ "gfx908" ], # [  ]
+  gpuTargets ? [
+    "gfx908"
+    "gfx90a"
+    "gfx942"
+    "gfx1030"
+    "gfx1100"
+  ], # [  ]
 }:
 
 stdenv.mkDerivation (
@@ -60,7 +66,7 @@ stdenv.mkDerivation (
     #   cd $out
     #   tar xf  ${cudaPackages.cuda_cudart.src} --strip-components=1
     # '';
-    cudaRtIncludes = cudaPackages.cudatoolkit;
+    #cudaRtIncludes = cudaPackages.cuda_cudart;
     triton-llvm' = builtins.trace "aotriton: TODO: confirm using same triton-llvm pinned hash as triton 3.2.x is ok" triton-llvm;
   in
   # triton-llvm' = triton-llvm.overrideAttrs (_old: {
@@ -86,8 +92,6 @@ stdenv.mkDerivation (
     };
     env.CXX = compiler;
     env.ROCM_PATH = "${clr}";
-    env.NIX_CC_USE_RESPONSE_FILE = 0;
-    env.NIX_DISABLE_WRAPPER_INCLUDES = 1;
     requiredSystemFeatures = [ "big-parallel" ];
 
     outputs =
@@ -142,7 +146,7 @@ stdenv.mkDerivation (
         xz
         nlohmann_json
         rocmlir
-        cudaRtIncludes
+        #cudaRtIncludes
 
         # Tensile deps - not optional, building without tensile isn't actually supported
         msgpack # FIXME: not included in cmake!
@@ -164,15 +168,16 @@ stdenv.mkDerivation (
     env.JSON_SYSPATH = nlohmann_json;
     env.MLIR_DIR = "${triton-llvm'}/lib/cmake/mlir";
     # build time dep for header only, only needs source.
-    env.TRITON_CUDACRT_PATH = cudaRtIncludes;
-    env.TRITON_CUDART_PATH = cudaRtIncludes;
-    env.CXXFLAGS = "-I/build/source/third_party/triton/third_party/nvidia/backend/include -I${cudaRtIncludes}/include";
+    # env.TRITON_CUDACRT_PATH = cudaRtIncludes;
+    # env.TRITON_CUDART_PATH = cudaRtIncludes;
+    env.CXXFLAGS = "-I/build/source/third_party/triton/third_party/nvidia/backend/include";
     # env.NOIMAGE_MODE = 1;
 
     # Fix up header issues in triton: https://github.com/triton-lang/triton/pull/3985/files
     preConfigure = ''
       mkdir third_party/triton/third_party/nvidia/backend/include/
-      cp ${cudaRtIncludes}/include/*.h third_party/triton/third_party/nvidia/backend/include/
+      touch third_party/triton/third_party/nvidia/backend/include/cuda.h
+      #cp ''${cudaRtIncludes}/include/*.h third_party/triton/third_party/nvidia/backend/include/
       find third_party/triton -type f -exec sed -i 's|[<]cupti.h[>]|"cupti.h"|g' {} +
       find third_party/triton -type f -exec sed -i 's|[<]cuda.h[>]|"cuda.h"|g' {} +
       grep -ir cuda.h third_party/triton

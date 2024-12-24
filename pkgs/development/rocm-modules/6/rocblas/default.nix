@@ -25,8 +25,6 @@
   buildTensile ? true,
   buildTests ? true,
   buildBenchmarks ? true,
-  #, tensileLogic ? "asm_full"
-  tensileCOVersion ? "default",
   # https://github.com/ROCm/Tensile/issues/1757
   # Allows gfx101* users to use rocBLAS normally.
   # Turn the below two values to `true` after the fix has been cherry-picked
@@ -42,16 +40,18 @@
   # would force all `gfx101*` GPUs to run as `gfx1010`, so `gfx101*` GPUs will
   # always try to use `gfx1010` code objects, hence building for `gfx1012` is
   # useless: https://github.com/NixOS/nixpkgs/pull/298388#issuecomment-2076327152
-  # , gpuTargets ? [ "gfx900;gfx906:xnack-;gfx908:xnack-;gfx90a:xnack+;gfx90a:xnack-;gfx942;gfx1010;gfx1030;gfx1100;gfx1101;gfx1102" ]
-  #, gpuTargets ? [ "gfx908;gfx90a;gfx942;gfx1010;gfx1030;gfx1100;gfx1101;gfx1102" ]
-  #, gpuTargets ? [ "gfx908:xnack-;gfx90a:xnack+;gfx90a:xnack-;gfx1030" ]
   gpuTargets ? [
+    "gfx900"
+    "gfx906"
     "gfx908"
     "gfx90a"
     "gfx942"
+    "gfx1010"
     "gfx1030"
     "gfx1100"
-  ], # "gfx1030" "gfx1100" ]
+    "gfx1101"
+    "gfx1102"
+  ],
 }:
 
 # FIXME: this derivation is ludicrously large, split into arch-specific derivations and symlink together?
@@ -125,7 +125,6 @@ stdenv.mkDerivation (finalAttrs: {
   env.LDFLAGS = lib.optionalString (
     buildTests || buildBenchmarks
   ) "-Wl,--as-needed -L${amd-blis}/lib -lblis-mt -lcblas";
-  env.NIX_DISABLE_WRAPPER_INCLUDES = 1;
   env.TENSILE_ROCM_ASSEMBLER_PATH = "${clang-sysrooted}/bin/clang++";
 
   cmakeFlags =
@@ -156,30 +155,18 @@ stdenv.mkDerivation (finalAttrs: {
       "-DCMAKE_INSTALL_LIBDIR=lib"
     ]
     ++ lib.optionals buildTensile [
-      #"        -DCMAKE_PREFIX_PATH="${DEPS_DIR};${ROCM_PATH}" \
       "-DCPACK_SET_DESTDIR=OFF"
       "-DLINK_BLIS=ON"
       "-DTensile_CODE_OBJECT_VERSION=default"
       "-DTensile_LOGIC=asm_full"
-      # "-DTensile_LOGIC=hip_lite"
-      #"-DTensile_SEPARATE_ARCHITECTURES=ON"
-      #"-DTensile_LAZY_LIBRARY_LOADING=ON"
       "-DTensile_LIBRARY_FORMAT=msgpack"
       (lib.cmakeBool "BUILD_WITH_PIP" false)
-      # "-DTensile_COMPILER=hipcc"
-      # "-DTensile_CODE_OBJECT_VERSION=V4"
-      # "-DTensile_LOGIC=hip_lite"
-      #(lib.cmakeFeature "Tensile_LOGIC" tensileLogic)
-      #(lib.cmakeFeature "Tensile_CODE_OBJECT_VERSION" tensileCOVersion)
       (lib.cmakeBool "Tensile_SEPARATE_ARCHITECTURES" tensileSepArch)
       (lib.cmakeBool "Tensile_LAZY_LIBRARY_LOADING" tensileLazyLib)
-      #(lib.cmakeBool "Tensile_PRINT_DEBUG" true)
-      #"-DTENSILE_GPU_ARCHS=gfx908"
-      #"-DTensile_VERBOSE=2"
     ];
 
   preConfigure = ''
-    makeFlagsArray+=("-l$((NIX_BUILD_CORES / 2))")
+    makeFlagsArray+=("-l$(nproc)")
   '';
 
   passthru.amdgpu_targets = gpuTargets';
