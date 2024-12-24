@@ -130,6 +130,7 @@ stdenv.mkDerivation (finalAttrs: {
   # Find zstd and add to target. Mainly for torch.
   patches = [
     ./skip-preexisting-dbs.patch
+    ./fix-isnan.patch # https://github.com/ROCm/MIOpen/pull/3448
     (fetchpatch {
       url = "https://github.com/ROCm/MIOpen/commit/e608b4325646afeabb5e52846997b926d2019d19.patch";
       hash = "sha256-oxa3qlIC2bzbwGxrQOZXoY/S7CpLsMrnWRB7Og0tk0M=";
@@ -212,8 +213,8 @@ stdenv.mkDerivation (finalAttrs: {
       "-DUNZIPPER=${bzip2}/bin/bzcat"
 
       # isnan not defined for float error, probably still needs hipcc? should try without hipcc again next bump
-      "-DCMAKE_C_COMPILER=hipcc"
-      "-DCMAKE_CXX_COMPILER=hipcc"
+      "-DCMAKE_C_COMPILER=amdclang"
+      "-DCMAKE_CXX_COMPILER=amdclang++"
       "-DROCM_PATH=${clr}"
       "-DHIP_ROOT_DIR=${clr}"
       (lib.cmakeBool "MIOPEN_USE_ROCBLAS" true)

@@ -54,11 +54,9 @@
   ],
 }:
 
-# FIXME: this derivation is ludicrously large, split into arch-specific derivations and symlink together?
+# FIXME: this derivation is ludicrously large, can we do anything about this?
 let
-  gpuTargets' = builtins.trace (lib.concatStringsSep ";" gpuTargets) (
-    lib.concatStringsSep ";" gpuTargets
-  );
+  gpuTargets' = lib.concatStringsSep ";" gpuTargets;
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "rocblas";

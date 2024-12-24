@@ -34,12 +34,13 @@
   buildBenchmarks ? false,
   buildSamples ? false,
   gpuTargets ? [
-    "gfx908"
+    # aotriton GPU support list:
+    # https://github.com/ROCm/aotriton/blob/main/v2python/gpu_targets.py
     "gfx90a"
     "gfx942"
-    "gfx1030"
     "gfx1100"
-  ], # [  ]
+    "gfx1101"
+  ],
 }:
 
 stdenv.mkDerivation (
@@ -60,25 +61,8 @@ stdenv.mkDerivation (
     gpuTargets' = lib.concatStringsSep ";" gpuTargets;
     compiler = "amdclang++";
     cFlags = "-O3 -DNDEBUG";
-    # cudaRtIncludes = runCommandNoCC "cuda_includes" {}
-    #   ''
-    #   mkdir -p $out
-    #   cd $out
-    #   tar xf  ${cudaPackages.cuda_cudart.src} --strip-components=1
-    # '';
-    #cudaRtIncludes = cudaPackages.cuda_cudart;
     triton-llvm' = builtins.trace "aotriton: TODO: confirm using same triton-llvm pinned hash as triton 3.2.x is ok" triton-llvm;
   in
-  # triton-llvm' = triton-llvm.overrideAttrs (_old: {
-  #   doCheck = false;
-  #   patches = [ ];
-  #   src = fetchFromGitHub {
-  #     owner = "llvm";
-  #     repo = "llvm-project";
-  #     rev = "bd9145c8c21334e099d51b3e66f49d51d24931ee";
-  #     hash = "sha256-CSZkswB8KPdph8cGOayeKSBSQjSUsHGvqQ0TRN04KSQ=";
-  #   };
-  # });
   {
     pname = "aotriton";
     version = "0.8.0b";
@@ -230,9 +214,8 @@ stdenv.mkDerivation (
         "-DCMAKE_INSTALL_BINDIR=bin"
         "-DCMAKE_INSTALL_LIBDIR=lib"
         "-DCMAKE_INSTALL_INCLUDEDIR=include"
-        # "-DSUPPORTED_TARGETS=${gpuTargets'}"
         "-DAMDGPU_TARGETS=${gpuTargets'}"
-        # "-DGPU_TARGETS=${gpuTargets'}"
+        "-DGPU_TARGETS=${gpuTargets'}"
       ]
       ++ lib.optionals buildTests [
         "-DBUILD_CLIENTS_TESTS=ON"

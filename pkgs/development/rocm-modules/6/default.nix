@@ -250,13 +250,15 @@ lib.makeScope newScope (
     };
 
     rccl = callPackage ./rccl {
-      inherit
-        rocmUpdateScript
-        rocm-cmake
-        rocm-smi
-        clr
-        hipify
-        ;
+      inherit rocmUpdateScript;
+      stdenv = llvm.rocmClangStdenv;
+    };
+
+    # RCCL with sanitizers and tests
+    # Can't have with sanitizer build as dep of other packages without
+    # runtime crashes due to ASAN not loading first
+    rccl-tests = callPackage ./rccl {
+      inherit rocmUpdateScript;
       stdenv = llvm.rocmClangStdenv;
       buildTests = true;
     };
@@ -397,23 +399,6 @@ lib.makeScope newScope (
     };
 
     # hipTensor - Only supports GFX9
-
-    # miopengemm = builtins.trace "miopengemm is deprecated" emptyDirectory;
-    miopengemm =
-      builtins.trace "hack: replace deprecated miopengemm with composable_kernel so torch has it"
-        symlinkJoin
-        {
-          name = "miopengemm-bodged-for-pytorch";
-          paths = [
-            # self.composable_kernel
-            self.hipblas-common
-          ];
-        };
-    #miopengemm = builtins.trace "miopengemm is documented" emptyDirectory;
-    # miopengemm= throw ''
-    #   'miopengemm' has been deprecated.
-    #   It is still available for some time as part of rocmPackages_5.
-    # ''; # Added 2024-3-3
 
     composable_kernel_build = callPackage ./composable_kernel {
       inherit rocmUpdateScript rocm-cmake clr;
