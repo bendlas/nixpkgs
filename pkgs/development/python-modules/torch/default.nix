@@ -311,6 +311,10 @@ buildPythonPackage rec {
           "# Upstream: set(CUDAToolkit_ROOT"
       substituteInPlace third_party/gloo/cmake/Cuda.cmake \
         --replace-warn "find_package(CUDAToolkit 7.0" "find_package(CUDAToolkit"
+      substituteInPlace third_party/NNPACK/CMakeLists.txt --replace "PYTHONPATH=" 'PYTHONPATH=$ENV{PYTHONPATH}:'
+      # flag from cmakeFlags doesn't work, not clear why
+      # setting it at the top of NNPACK's own CMakeLists does
+      sed -i '2s;^;set(PYTHON_SIX_SOURCE_DIR ${six.src})\n;' third_party/NNPACK/CMakeLists.txt
     ''
     + lib.optionalString rocmSupport ''
       # https://github.com/facebookincubator/gloo/pull/297
