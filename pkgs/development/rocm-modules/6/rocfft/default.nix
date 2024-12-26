@@ -14,11 +14,11 @@
   gtest,
   openmp,
   rocrand,
-  gpuTargets ? clr.gpuTargets,
+  gpuTargets ? clr.localGpuTargets or clr.gpuTargets,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "rocfft";
+  pname = "rocfft${clr.gpuArchSuffix}";
   version = "6.3.1";
 
   src = fetchFromGitHub {
