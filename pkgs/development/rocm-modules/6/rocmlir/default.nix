@@ -79,10 +79,6 @@ builtins.trace "FIXME: rocmlir is using its own LLVM build" stdenv.mkDerivation 
     ncurses
   ];
 
-  dontStrip = true;
-  env.CFLAGS = "-g1 -gz";
-  env.CXXFLAGS = "-g1 -gz";
-
   cmakeFlags =
     [
       "-DLLVM_TARGETS_TO_BUILD=AMDGPU;${llvmNativeTarget}"

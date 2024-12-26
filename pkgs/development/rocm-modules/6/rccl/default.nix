@@ -17,7 +17,7 @@
   rocprofiler-register,
   autoPatchelfHook,
   buildTests ? false,
-  gpuTargets ? [ ],
+  gpuTargets ? (clr.localGpuTargets or [ ]),
 }:
 
 let
@@ -77,7 +77,6 @@ stdenv.mkDerivation (finalAttrs: {
       chrpath
     ];
 
-  dontStrip = true;
   cmakeFlags =
     [
       "-DCMAKE_BUILD_TYPE=Release"
@@ -107,8 +106,10 @@ stdenv.mkDerivation (finalAttrs: {
   makeFlags = [ "-l32" ];
 
   env.CCC_OVERRIDE_OPTIONS = "+-parallel-jobs=6";
-  env.CFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing -gz -g1 ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer";
-  env.CXXFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing -gz -g1 ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer";
+  # -O2 and -fno-strict-aliasing due to UB issues in RCCL :c
+  # Reported upstream
+  env.CFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer";
+  env.CXXFLAGS = "-I${clr}/include -O2 -fno-strict-aliasing ${san}-fno-omit-frame-pointer -momit-leaf-frame-pointer";
   env.LDFLAGS = "${san}";
   postPatch = ''
     patchShebangs src tools

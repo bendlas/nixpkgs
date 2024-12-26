@@ -16,11 +16,14 @@
   ninja,
   buildTests ? false,
   buildExamples ? false,
-  # FIXME: I can't get this to build for gfx1030
-  gpuTargets ? [
-    "gfx908"
-    "gfx90a"
-  ], # gpuTargets = [ "gfx803" "gfx900" "gfx1030" ... ]
+  # FIXME: This arch list needs to grow, had build issues and will need to test
+  # but testing is very slow
+  gpuTargets ? (
+    clr.localGpuTargets or [
+      "gfx908"
+      "gfx90a"
+    ]
+  ),
 }:
 
 stdenv.mkDerivation (finalAttrs: {

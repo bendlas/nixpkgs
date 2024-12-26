@@ -28,9 +28,6 @@ stdenv.mkDerivation (finalAttrs: {
       --replace-fail "/usr/bin/lsb_release" "${lsb-release}/bin/lsb_release"
   '';
 
-  dontStrip = true;
-  env.CFLAGS = "-v -g1 -gz";
-  env.CXXFLAGS = "-v -g1 -gz";
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
   ];

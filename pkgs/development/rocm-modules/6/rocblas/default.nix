@@ -39,18 +39,20 @@
   # would force all `gfx101*` GPUs to run as `gfx1010`, so `gfx101*` GPUs will
   # always try to use `gfx1010` code objects, hence building for `gfx1012` is
   # useless: https://github.com/NixOS/nixpkgs/pull/298388#issuecomment-2076327152
-  gpuTargets ? [
-    "gfx900"
-    "gfx906"
-    "gfx908"
-    "gfx90a"
-    "gfx942"
-    "gfx1010"
-    "gfx1030"
-    "gfx1100"
-    "gfx1101"
-    "gfx1102"
-  ],
+  gpuTargets ? (
+    clr.localGpuTargets or [
+      "gfx900"
+      "gfx906"
+      "gfx908"
+      "gfx90a"
+      "gfx942"
+      "gfx1010"
+      "gfx1030"
+      "gfx1100"
+      "gfx1101"
+      "gfx1102"
+    ]
+  ),
 }:
 
 # FIXME: this derivation is ludicrously large, can we do anything about this?
@@ -114,9 +116,8 @@ stdenv.mkDerivation (finalAttrs: {
     ];
 
   dontStrip = true;
-  env.CFLAGS = "-g1 -gz";
   env.CXXFLAGS =
-    "-O3 -DNDEBUG -g1 -gz -I${hipblas-common}/include"
+    "-O3 -DNDEBUG -I${hipblas-common}/include"
     + lib.optionalString (buildTests || buildBenchmarks) " -I${amd-blis}/include/blis";
   # Fails to link tests if we don't add amd-blis libs
   env.LDFLAGS = lib.optionalString (

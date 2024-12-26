@@ -51,9 +51,6 @@ stdenv.mkDerivation (finalAttrs: {
       gbenchmark
     ];
 
-  dontStrip = true;
-  env.CFLAGS = "-g1 -gz";
-  env.CXXFLAGS = "-g1 -gz";
   cmakeFlags =
     [
       "-DCMAKE_BUILD_TYPE=Release"

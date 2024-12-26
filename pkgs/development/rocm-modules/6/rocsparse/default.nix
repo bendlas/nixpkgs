@@ -15,7 +15,7 @@
   python3Packages,
   buildTests ? false,
   buildBenchmarks ? false, # Seems to depend on tests
-  gpuTargets ? clr.gpuTargets,
+  gpuTargets ? clr.localGpuTargets or clr.gpuTargets,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -62,9 +62,6 @@ stdenv.mkDerivation (finalAttrs: {
       python3Packages.pyyaml
     ];
 
-  dontStrip = true;
-  env.CFLAGS = "-g1 -gz";
-  env.CXXFLAGS = "-g1 -gz";
   cmakeFlags =
     [
       "-DCMAKE_BUILD_TYPE=Release"

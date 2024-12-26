@@ -28,6 +28,7 @@
   khronos-ocl-icd-loader,
   gcc-unwrapped,
   writeShellScriptBin,
+  localGpuTargets ? null,
 }:
 
 let
@@ -96,10 +97,6 @@ stdenv.mkDerivation (finalAttrs: {
     rocminfo
   ];
 
-  dontStrip = true;
-  env.CFLAGS = "-g1 -gz";
-  env.CXXFLAGS = "-g1 -gz";
-
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
     "-DCMAKE_POLICY_DEFAULT_CMP0072=NEW" # Prefer newer OpenGL libraries
@@ -108,7 +105,6 @@ stdenv.mkDerivation (finalAttrs: {
     "-DHIP_COMMON_DIR=${hip-common}"
     "-DHIPCC_BIN_DIR=${hipcc}/bin"
     "-DHIP_PLATFORM=amd"
-    # FIXME: roctracer src change = CLR mass rebuild? :(
     "-DPROF_API_HEADER_PATH=${roctracer.src}/inc/ext"
     "-DROCM_PATH=${rocminfo}"
     "-DBUILD_ICD=ON"
@@ -231,48 +227,52 @@ stdenv.mkDerivation (finalAttrs: {
   #   exit 1
   # '';
 
-  passthru = {
-    # All known and valid general GPU targets
-    # We cannot use this for each ROCm library, as each defines their own supported targets
-    # See: https://github.com/ROCm/ROCm/blob/77cbac4abab13046ee93d8b5bf410684caf91145/README.md#library-target-matrix
-    # Generic targets are not yet available in rocm-6.3.1 llvm
-    gpuTargets = lib.forEach [
-      # "9-generic"
-      "900" # MI25, Vega 56/64
-      "906" # MI50/60, Radeon VII
-      "908" # MI100
-      "90a" # MI210 / MI250
-      # "9-4-generic"
-      # 940/1 - never released publicly, maybe HPE cray specific MI3xx?
-      "942" # MI300
-      # "10-1-generic"
-      "1010"
-      "1012"
-      # "10-3-generic"
-      "1030" # W6800, various Radeon cards
-      # "11-generic"
-      "1100"
-      "1101"
-      "1102"
-    ] (target: "gfx${target}");
+  passthru =
+    {
+      # All known and valid general GPU targets
+      # We cannot use this for each ROCm library, as each defines their own supported targets
+      # See: https://github.com/ROCm/ROCm/blob/77cbac4abab13046ee93d8b5bf410684caf91145/README.md#library-target-matrix
+      # Generic targets are not yet available in rocm-6.3.1 llvm
+      gpuTargets = lib.forEach [
+        # "9-generic"
+        "900" # MI25, Vega 56/64
+        "906" # MI50/60, Radeon VII
+        "908" # MI100
+        "90a" # MI210 / MI250
+        # "9-4-generic"
+        # 940/1 - never released publicly, maybe HPE cray specific MI3xx?
+        "942" # MI300
+        # "10-1-generic"
+        "1010"
+        "1012"
+        # "10-3-generic"
+        "1030" # W6800, various Radeon cards
+        # "11-generic"
+        "1100"
+        "1101"
+        "1102"
+      ] (target: "gfx${target}");
 
-    updateScript = rocmUpdateScript {
-      name = finalAttrs.pname;
-      inherit (finalAttrs.src) owner;
-      inherit (finalAttrs.src) repo;
-      page = "tags?per_page=4";
-    };
+      updateScript = rocmUpdateScript {
+        name = finalAttrs.pname;
+        inherit (finalAttrs.src) owner;
+        inherit (finalAttrs.src) repo;
+        page = "tags?per_page=4";
+      };
 
-    impureTests = {
-      rocm-smi = callPackage ./test-rocm-smi.nix {
-        inherit rocm-smi;
-        clr = finalAttrs.finalPackage;
+      impureTests = {
+        rocm-smi = callPackage ./test-rocm-smi.nix {
+          inherit rocm-smi;
+          clr = finalAttrs.finalPackage;
+        };
+        opencl-example = callPackage ./test-opencl-example.nix {
+          clr = finalAttrs.finalPackage;
+        };
       };
-      opencl-example = callPackage ./test-opencl-example.nix {
-        clr = finalAttrs.finalPackage;
-      };
+    }
+    // lib.optionalAttrs (localGpuTargets != null) {
+      inherit localGpuTargets;
     };
-  };
 
   meta = with lib; {
     description = "AMD Common Language Runtime for hipamd, opencl, and rocclr";

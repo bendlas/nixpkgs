@@ -28,12 +28,14 @@
   # WMMA on gfx1100 may be broken
   # MFMA on MI100 may be broken
   # MI200/MI300 known to work
-  gpuTargets ? [
-    "gfx908"
-    "gfx90a"
-    "gfx942"
-    "gfx1100"
-  ],
+  gpuTargets ? (
+    clr.localGpuTargets or [
+      # "gfx908" FIXME: confirm MFMA on MI100 works
+      "gfx90a"
+      "gfx942"
+      # "gfx1100" FIXME: confirm WMMA targets work
+    ]
+  ),
 }:
 
 stdenv.mkDerivation (
