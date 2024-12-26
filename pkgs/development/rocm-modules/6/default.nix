@@ -42,7 +42,9 @@ lib.makeScope newScope (
 
     rocm-cmake = self.callPackage ./rocm-cmake { };
 
-    rocm-smi = pyPackages.callPackage ./rocm-smi { };
+    rocm-smi = pyPackages.callPackage ./rocm-smi {
+      inherit (self) rocmUpdateScript;
+    };
 
     rocm-device-libs = self.callPackage ./rocm-device-libs {
       inherit (llvm) rocm-merged-llvm;
@@ -133,7 +135,12 @@ lib.makeScope newScope (
 
     hipfft = self.callPackage ./hipfft { };
 
-    tensile = pyPackages.callPackage ./tensile { };
+    tensile = pyPackages.callPackage ./tensile {
+      inherit (self)
+        rocmUpdateScript
+        rocminfo
+        ;
+    };
 
     rocblas = self.callPackage ./rocblas {
       buildTests = true;
@@ -164,7 +171,10 @@ lib.makeScope newScope (
 
     # FIXME: we have compressed code objects now, may be able to skip two stages?
     composable_kernel = self.callPackage ./composable_kernel/unpack.nix { };
-    ck4inductor = pyPackages.callPackage ./composable_kernel/ck4inductor.nix { };
+    ck4inductor = pyPackages.callPackage ./composable_kernel/ck4inductor.nix {
+      inherit (self) composable_kernel_build;
+      inherit (llvm) rocm-merged-llvm;
+    };
 
     half = self.callPackage ./half { };
 

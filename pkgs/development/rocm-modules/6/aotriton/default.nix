@@ -27,7 +27,7 @@
   zstd,
   xz,
   pkg-config,
-  clang-sysrooted,
+  clang,
   writeShellScriptBin,
   rocmUpdateScript,
   buildTests ? false,
@@ -109,7 +109,6 @@ stdenv.mkDerivation (
       pkg-config
       py
       clr
-      clang-sysrooted
       #git
       #gfortran
       ninja
@@ -148,7 +147,7 @@ stdenv.mkDerivation (
       ];
 
     env.TRITON_OFFLINE_BUILD = 1;
-    env.LLVM_SYSPATH = "${triton-llvm'}"; # clang-sysrooted;
+    env.LLVM_SYSPATH = "${triton-llvm'}";
     env.JSON_SYSPATH = nlohmann_json;
     env.MLIR_DIR = "${triton-llvm'}/lib/cmake/mlir";
     # build time dep for header only, only needs source.

@@ -16,7 +16,6 @@
   git,
   amd-blis,
   zstd,
-  clang-sysrooted,
   hipblas-common,
   hipblaslt,
   python3Packages,
@@ -123,7 +122,7 @@ stdenv.mkDerivation (finalAttrs: {
   env.LDFLAGS = lib.optionalString (
     buildTests || buildBenchmarks
   ) "-Wl,--as-needed -L${amd-blis}/lib -lblis-mt -lcblas";
-  env.TENSILE_ROCM_ASSEMBLER_PATH = "${clang-sysrooted}/bin/clang++";
+  env.TENSILE_ROCM_ASSEMBLER_PATH = "${stdenv.cc}/bin/clang++";
 
   cmakeFlags =
     [

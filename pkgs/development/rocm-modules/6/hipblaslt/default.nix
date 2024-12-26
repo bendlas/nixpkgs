@@ -19,7 +19,6 @@
   libffi,
   zlib,
   zstd,
-  clang-sysrooted,
   writeShellScriptBin,
   rocmUpdateScript,
   buildTests ? false,
@@ -70,8 +69,8 @@ stdenv.mkDerivation (
     env.CFLAGS = cFlags;
     env.CXXFLAGS = cFlags;
     env.ROCM_PATH = "${clr}";
-    env.TENSILE_ROCM_ASSEMBLER_PATH = "${clang-sysrooted}/bin/clang++";
-    env.TENSILE_GEN_ASSEMBLY_TOOLCHAIN = "${clang-sysrooted}/bin/clang++";
+    env.TENSILE_ROCM_ASSEMBLER_PATH = "${stdenv.cc}/bin/clang++";
+    env.TENSILE_GEN_ASSEMBLY_TOOLCHAIN = "${stdenv.cc}/bin/clang++";
     requiredSystemFeatures = [ "big-parallel" ];
 
     patches = [

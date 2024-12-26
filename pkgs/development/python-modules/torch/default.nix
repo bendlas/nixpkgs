@@ -407,8 +407,8 @@ buildPythonPackage rec {
   # Also avoids pytorch exporting the headers of pybind11
   USE_SYSTEM_PYBIND11 = true;
 
-  # NB technical debt: building without NNPACK as workaround for missing `six`
-  USE_NNPACK = 0;
+  # Multicore CPU convnet support
+  USE_NNPACK = 1;
 
   # Explicitly enable MPS for Darwin
   USE_MPS = setBool stdenv.hostPlatform.isDarwin;
