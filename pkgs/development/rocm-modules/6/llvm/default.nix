@@ -175,8 +175,6 @@ in
 rec {
   inherit (llvmPackagesRocm) libunwind;
   inherit (llvmPackagesRocm) libcxx;
-  old-llvm = llvmPackagesRocm.llvm;
-  inherit gcc-prefix gcc-unwrapped;
   llvm = (llvmPackagesRocm.llvm.override { ninja = emptyDirectory; }).overrideAttrs (old: {
     dontStrip = true;
     #postInstall = lib.strings.replaceStrings [ "release" ] [ "relwithdebinfo" ] old.postInstall;
@@ -241,15 +239,6 @@ rec {
         find $lib -type f -exec remove-references-to -t ${stdenv.cc.bintools} {} +
       '';
   });
-  llvm-ref-test = symlinkJoin {
-    name = "llvmreftest";
-    paths = [
-      llvm
-      clang
-      lld
-    ];
-    disallowedRequisites = disallowedRefsForToolchain;
-  };
   lld =
     (llvmPackagesRocm.lld.override {
       libllvm = llvm;
@@ -312,7 +301,6 @@ rec {
             )
           '';
       });
-  clang-unwrapped-orig = llvmPackagesRocm.clang-unwrapped;
   clang-unwrapped =
     (
       (llvmPackagesRocm.clang-unwrapped.override {

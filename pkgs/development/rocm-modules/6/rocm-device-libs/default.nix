@@ -46,10 +46,6 @@ stdenv.mkDerivation (finalAttrs: {
     rocm-merged-llvm
   ];
 
-  dontStrip = true;
-  env.CFLAGS = "-g1 -gz";
-  env.CXXFLAGS = "-g1 -gz";
-
   cmakeFlags = [
     "-DCMAKE_RELEASE_TYPE=Release"
     "-DLLVM_TARGETS_TO_BUILD=AMDGPU;${llvmNativeTarget}"

@@ -16,7 +16,7 @@
   rocprofiler,
   rocprofiler-register,
   autoPatchelfHook,
-  buildTests ? true,
+  buildTests ? false,
   gpuTargets ? [ ],
 }:
 
