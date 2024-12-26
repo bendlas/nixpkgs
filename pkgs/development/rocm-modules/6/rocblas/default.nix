@@ -60,7 +60,7 @@ let
   gpuTargets' = lib.concatStringsSep ";" gpuTargets;
 in
 stdenv.mkDerivation (finalAttrs: {
-  pname = "rocblas";
+  pname = "rocblas${clr.gpuArchSuffix}";
   version = "6.3.1";
 
   outputs = [

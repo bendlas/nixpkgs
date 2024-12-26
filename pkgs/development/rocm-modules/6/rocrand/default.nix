@@ -10,11 +10,11 @@
   gbenchmark,
   buildTests ? false,
   buildBenchmarks ? false,
-  gpuTargets ? [ ],
+  gpuTargets ? clr.localGpuTargets or [ ],
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "rocrand";
+  pname = "rocrand${clr.gpuArchSuffix}";
   version = "6.3.1";
 
   outputs =

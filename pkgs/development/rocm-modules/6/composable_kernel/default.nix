@@ -27,7 +27,7 @@
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "composable_kernel";
+  pname = "composable_kernel${clr.gpuArchSuffix}";
   # This version must be PEP 440 compatible because it's the version of the ck4inductor python package too
   version = "6.4.0-unstable-20241220";
 

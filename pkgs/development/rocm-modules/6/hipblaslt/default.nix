@@ -58,7 +58,7 @@ stdenv.mkDerivation (
   {
     # build will fail with llvm libcxx, must use gnu libstdcxx
     # https://github.com/llvm/llvm-project/issues/98734
-    pname = "hipblaslt";
+    pname = "hipblaslt${clr.gpuArchSuffix}";
     version = "6.3.1";
 
     src = fetchFromGitHub {

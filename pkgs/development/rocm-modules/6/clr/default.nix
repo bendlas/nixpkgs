@@ -269,9 +269,14 @@ stdenv.mkDerivation (finalAttrs: {
           clr = finalAttrs.finalPackage;
         };
       };
+
+      selectGpuTargets = { supported ? []}: supported;
+      gpuArchSuffix = "";
     }
     // lib.optionalAttrs (localGpuTargets != null) {
       inherit localGpuTargets;
+      gpuArchSuffix = builtins.concatStringsSep "-" localGpuTargets;
+      selectGpuTargets = { supported ? []}: if supported == [] then localGpuTargets else lib.lists.intersectLists localGpuTargets supported;
     };
 
   meta = with lib; {

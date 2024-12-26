@@ -32,7 +32,7 @@ in
 # * kfd_peerdirect support which is on out-of-tree amdkfd in ROCm/ROCK-Kernel-Driver
 # * ib_peer_mem support which is ??? and ubuntu has a patchset here https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/hirsute/commit/?id=e9eb90eb5e4a5aef6f516abbc720038fc0d1a139
 stdenv.mkDerivation (finalAttrs: {
-  pname = "rccl";
+  pname = "rccl${clr.gpuArchSuffix}";
   version = "6.3.1";
 
   outputs =
