@@ -34,7 +34,7 @@ let
   };
 
   # rocm build fails with gcc stdenv due to unrecognised arg parallel-jobs
-  stdenv' = if enableRocm then rocmPackages.llvm.rocmClangStdenv else stdenv;
+  stdenv' = if enableRocm then rocmPackages.stdenv else stdenv;
 in
 stdenv'.mkDerivation rec {
   pname = "ucx";
