@@ -18,9 +18,12 @@
   buildTests ? false, # `argument of type 'NoneType' is not iterable`
 }:
 
-# FIXME FIXME FIXME: rocmlir has an entire separate LLVM build in a subdirectory this is silly
+# FIXME: rocmlir has an entire separate LLVM build in a subdirectory this is silly
 # It seems to be forked from AMD's own LLVM
 # If possible reusing the rocmPackages.llvm build would be better
+# Would have to confirm it is compatible with ROCm's tagged LLVM.
+# Fairly likely it's not given AMD's track record with forking their own software in incompatible ways
+# in subdirs
 
 # Theoretically, we could have our MLIR have an output
 # with the source and built objects so that we can just
@@ -36,7 +39,7 @@ let
     else
       throw "Unsupported ROCm LLVM platform";
 in
-builtins.trace "FIXME: rocmlir is using its own LLVM build" stdenv.mkDerivation (finalAttrs: {
+stdenv.mkDerivation (finalAttrs: {
   pname = "rocmlir${suffix}";
   version = "6.3.1";
 

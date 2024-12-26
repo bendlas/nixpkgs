@@ -89,7 +89,8 @@ let
           ;
       };
 
-      hsakmt = builtins.trace "hsakmt is now part of rocm-runtime" self.rocm-runtime;
+      # hsakmt was merged into rocm-runtime
+      hsakmt = self.rocm-runtime;
 
       rocprofiler = self.callPackage ./rocprofiler {
         inherit (llvm) clang;
@@ -252,10 +253,11 @@ let
       mpi = self.openmpi;
 
       triton-llvm =
-        builtins.trace "FIXME: triton-rocm needs ANOTHER different LLVM build"
-          (triton-llvm.override {
-            buildTests = false; # FIXME: why are tests failing?
-          }).overrideAttrs
+        (triton-llvm.override {
+          # Workaround https://github.com/NixOS/nixpkgs/issues/363965 so we can test
+          # not root caused
+          buildTests = false;
+        }).overrideAttrs
           {
             src = fetchFromGitHub {
               owner = "llvm";

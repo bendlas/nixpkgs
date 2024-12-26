@@ -61,7 +61,7 @@ stdenv.mkDerivation (
     gpuTargets' = lib.concatStringsSep ";" gpuTargets;
     compiler = "amdclang++";
     cFlags = "-O3 -DNDEBUG";
-    triton-llvm' = builtins.trace "aotriton: TODO: confirm using same triton-llvm pinned hash as triton 3.2.x is ok" triton-llvm;
+    triton-llvm' = triton-llvm;
   in
   {
     pname = "aotriton";
