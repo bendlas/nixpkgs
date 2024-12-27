@@ -195,8 +195,8 @@ goBuild {
   postInstall = lib.optionalString stdenv.hostPlatform.isLinux ''
     # copy libggml_*.so and runners into lib
     # https://github.com/ollama/ollama/blob/v0.4.4/llama/make/gpu.make#L90
-    # mkdir -p $out/lib
-    # cp -r build/*/runners/*/* $out/lib/
+    mkdir -p $out/lib
+    cp -r llama/build/*/runners $out/lib/
   '';
 
   postFixup =
