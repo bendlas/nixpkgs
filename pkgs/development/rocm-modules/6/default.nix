@@ -41,7 +41,9 @@ let
       inherit (self.llvm) rocm-merged-llvm clang openmp;
 
       rocm-core = self.callPackage ./rocm-core { };
-      amdsmi = pyPackages.callPackage ./amdsmi { };
+      amdsmi = pyPackages.callPackage ./amdsmi {
+        inherit (self) rocmUpdateScript;
+      };
 
       rocm-cmake = self.callPackage ./rocm-cmake { };
 
