@@ -15,13 +15,13 @@
 
 stdenv.mkDerivation {
   pname = "miraclecast";
-  version = "1.0-20231112";
+  version = "1.0-20240713";
 
   src = fetchFromGitHub {
     owner = "albfan";
     repo = "miraclecast";
-    rev = "af6ab257eae83bb0270a776a8fe00c0148bc53c4";
-    hash = "sha256-3ZIAvA3w/ZhoJtVmUD444nch0PGD58PdBRke7zd9IuQ=";
+    rev = "937747fd4de64a33bccf5adb73924c435ceb821b";
+    hash = "sha256-y37+AOz8xYjtDk9ITxMB7UeWeMpDH+b6HQBczv+x5zo=";
   };
 
   nativeBuildInputs = [
