@@ -582,14 +582,9 @@ let
       # strings, which is usually not what you want.
       # We use a lib.warn because `deprecationMessage` doesn't trigger in nested types such as `attrsOf string`
       string =
-        lib.warn
-          "The type `types.string` is deprecated. See https://github.com/NixOS/nixpkgs/pull/66346 for better alternative types."
-          (
-            separatedString ""
-            // {
-              name = "string";
-            }
-          );
+        separatedString "" // {
+          name = "string";
+        };
 
       passwdEntry =
         entryType:
