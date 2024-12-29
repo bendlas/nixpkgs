@@ -31,7 +31,6 @@ stdenv.mkDerivation rec {
     openssl
     (libevent.override { inherit openssl; })
     libprom
-    libpromhttp
     libmicrohttpd
     sqlite.dev
   ];
