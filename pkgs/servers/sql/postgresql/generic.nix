@@ -323,6 +323,7 @@ let
           # because there is a realistic use-case for extensions to locate the /lib directory to
           # load other shared modules.
           remove-references-to -t "$dev" -t "$doc" -t "$man" "$out/bin/postgres"
+          remove-references-to -t "$dev" -t "$doc" -t "$man" $(find $lib -type f)
         ''
         + lib.optionalString (!stdenv'.hostPlatform.isStatic) ''
           if [ -z "''${dontDisableStatic:-}" ]; then
