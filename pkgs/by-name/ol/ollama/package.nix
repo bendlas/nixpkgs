@@ -3,7 +3,6 @@
   buildGoModule,
   fetchFromGitHub,
   buildEnv,
-  linkFarm,
   overrideCC,
   makeWrapper,
   stdenv,
@@ -11,6 +10,7 @@
   nix-update-script,
 
   cmake,
+  gcc-unwrapped,
   gcc12,
   gitMinimal,
   clblast,
@@ -20,6 +20,7 @@
   darwin,
   autoAddDriverRunpath,
   versionCheckHook,
+  autoPatchelfHook,
 
   # passthru
   nixosTests,
@@ -70,6 +71,7 @@ let
 
   rocmLibs = [
     rocmPackages.clr
+    rocmPackages.hipblas-common
     rocmPackages.hipblas
     rocmPackages.rocblas
     rocmPackages.rocsolver
@@ -77,10 +79,9 @@ let
     rocmPackages.rocm-device-libs
     rocmPackages.rocm-smi
   ];
-  rocmClang = linkFarm "rocm-clang" { llvm = rocmPackages.llvm.clang; };
   rocmPath = buildEnv {
     name = "rocm-path";
-    paths = rocmLibs ++ [ rocmClang ];
+    paths = rocmLibs;
   };
 
   cudaLibs = [
@@ -145,6 +146,13 @@ goBuild {
       ROCM_PATH = rocmPath;
       CLBlast_DIR = "${clblast}/lib/cmake/CLBlast";
       HIP_PATH = rocmPath;
+      CFLAGS = "-Wno-c++17-extensions -I${rocmPath}/include";
+      CXXFLAGS = "-Wno-c++17-extensions -I${rocmPath}/include";
+    }
+    // lib.optionalAttrs (enableRocm && (rocmPackages.clr.localGpuTargets or false) != false) {
+      # If rocm CLR is set to build for an exact set of targets reuse that target list,
+      # otherwise let ollama use its builtin defaults
+      HIP_ARCHS = lib.concatStringsSep ";" rocmPackages.clr.localGpuTargets;
     }
     // lib.optionalAttrs enableCuda {
       CUDA_PATH = cudaPath;
@@ -154,6 +162,8 @@ goBuild {
     [
       cmake
       gitMinimal
+      # rpaths of runners end up wrong without this
+      autoPatchelfHook
     ]
     ++ lib.optionals enableRocm [
       rocmPackages.llvm.bintools
@@ -167,7 +177,8 @@ goBuild {
     ++ lib.optionals stdenv.hostPlatform.isDarwin metalFrameworks;
 
   buildInputs =
-    lib.optionals enableRocm (rocmLibs ++ [ libdrm ])
+    [ gcc-unwrapped.lib ]
+    ++ lib.optionals enableRocm (rocmLibs ++ [ libdrm ])
     ++ lib.optionals enableCuda cudaLibs
     ++ lib.optionals stdenv.hostPlatform.isDarwin metalFrameworks;
 
@@ -193,11 +204,17 @@ goBuild {
           "dist_rocm"
         else
           "dist";
-    in
-    # build llama.cpp libraries for ollama
-    ''
+      # build llama.cpp libraries for ollama
+    in ''
       make ${dist_cmd} -j $NIX_BUILD_CORES
     '';
+
+  postInstall = lib.optionalString stdenv.hostPlatform.isLinux ''
+    # copy runner folders into $out/lib/ollama/runners/
+    # end result should be multiple folders inside runners/ each with their own ollama_llama_server binary
+    mkdir -p $out/lib/ollama/runners
+    cp -r llama/build/*/runners/* $out/lib/ollama/runners/
+  '';
 
   postFixup =
     # the app doesn't appear functional at the moment, so hide it
