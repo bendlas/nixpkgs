@@ -1659,6 +1659,7 @@
   ./services/web-apps/gotosocial.nix
   ./services/web-apps/goupile.nix
   ./services/web-apps/grav.nix
+  ./services/web-apps/grist-core.nix
   ./services/web-apps/grocy.nix
   ./services/web-apps/guacamole-client.nix
   ./services/web-apps/guacamole-server.nix
