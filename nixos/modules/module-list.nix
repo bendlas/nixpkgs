@@ -1502,6 +1502,7 @@
   ./services/web-apps/gotify-server.nix
   ./services/web-apps/gotosocial.nix
   ./services/web-apps/grav.nix
+  ./services/web-apps/grist-core.nix
   ./services/web-apps/grocy.nix
   ./services/web-apps/pixelfed.nix
   ./services/web-apps/goatcounter.nix
