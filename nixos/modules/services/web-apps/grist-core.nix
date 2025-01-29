@@ -40,6 +40,7 @@ in
       internal = true;
       type = types.package;
       default = pkgs.grist-core.pythonEnv;
+      defaultText = "pkgs.grist-core.pythonEnv";
       example = literalExpression ''
         pkgs.python3.withPackages (ps: with ps; [
           astroid
@@ -77,10 +78,7 @@ in
       type =
         with types;
         submodule {
-          freeformType = attrsOf (oneOf [
-            str
-            null
-          ]);
+          freeformType = attrsOf (nullOr str);
 
           options = {
             GRIST_DATA_DIR = mkOption {
@@ -110,6 +108,7 @@ in
             GRIST_SANDBOX_FLAVOR = mkOption {
               type = nullOr str;
               default = if cfg.enableSandboxing then "gvisor" else null;
+              defaultText = "if cfg.enableSandboxing then \"gvisor\" else null";
               readOnly = true;
               description = ''
                 If set, forces Grist to use the specified kind of sandbox.
