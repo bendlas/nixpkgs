@@ -226,6 +226,8 @@ in
 
           ReadWritePaths = "";
 
+          StateDirectory = "grist-core grist-core/docs";
+
           TemporaryFileSystem = [
             "/usr:ro"
             "/usr/local/lib:ro"
