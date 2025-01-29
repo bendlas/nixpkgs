@@ -272,6 +272,20 @@
             git push origin FETCH_HEAD:refs/heads/main-$(date -I)
           '');
         };
+        apply-pr = {
+          type = "app";
+          program = toString (self.legacyPackages.${system}.writeShellScript "apply-patch" ''
+            set -euo pipefail
+            set -x
+            noPrSeparatorCommit=$(git log --format=oneline --max-count=32 | grep "============ no associated PR ============" | cut -d' ' -f1)
+            git checkout $noPrSeparatorCommit^1
+            git commit --allow-empty -m "------------ pr $1 -------------"
+            curl -L https://github.com/NixOS/nixpkgs/pull/$1.patch | git am --3way
+            git cherry-pick --allow-empty $noPrSeparatorCommit^1..main
+            git branch -f main HEAD
+            git checkout main
+          '');
+        };
       });
     };
 }
