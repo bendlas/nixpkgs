@@ -1342,7 +1342,7 @@ let
             ACPI_HOTPLUG_CPU = yes;
             ACPI_HOTPLUG_MEMORY = yes;
             MEMORY_HOTPLUG = yes;
-            MEMORY_HOTPLUG_DEFAULT_ONLINE = yes;
+            MEMORY_HOTPLUG_DEFAULT_ONLINE = whenOlder "6.14" yes;
             MEMORY_HOTREMOVE = yes;
             HOTPLUG_CPU = yes;
             MIGRATION = yes;
