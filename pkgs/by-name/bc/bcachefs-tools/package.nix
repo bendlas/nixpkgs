@@ -29,22 +29,15 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "bcachefs-tools";
-  version = "1.13.0";
+  version = "1.20.0-unstable";
 
   src = fetchFromGitHub {
     owner = "koverstreet";
     repo = "bcachefs-tools";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-w55Fs1RZ4c55vTvb3jArPcmBLij1nuLi2MUHMMXPhng=";
+    # tag = "v${finalAttrs.version}";
+    rev = "67c9b378c7e7820b91033004b032e236a8069b4a";
+    hash = "sha256-f+eddgaYWv/8b/fnixtodEuOh8wf0Dsra60SHzoUXfs=";
   };
-
-  patches = [
-    # backport patch to fix build with latest liburcu
-    (fetchpatch {
-      url = "https://github.com/koverstreet/bcachefs-tools/commit/634c812a1ed05de8e3d1dc146eed95b942e1e38d.patch";
-      hash = "sha256-AL+nflQHKIwzI35NXZG2rniNjUfgLmv3osHHdpB1cGs=";
-    })
-  ];
 
   nativeBuildInputs = [
     pkg-config
