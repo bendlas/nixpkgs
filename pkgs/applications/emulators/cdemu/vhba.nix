@@ -1,19 +1,23 @@
 {
   lib,
   stdenv,
-  fetchurl,
+  fetchFromGitHub,
   kernel,
   kernelModuleMakeFlags,
 }:
 
 stdenv.mkDerivation rec {
   pname = "vhba";
-  version = "20240917";
+  version = "20240917-unstable";
 
-  src = fetchurl {
-    url = "mirror://sourceforge/cdemu/vhba-module-${version}.tar.xz";
-    hash = "sha256-zjTLriw2zvjX0Jxfa9QtaHG5tTC7cLTKEA+WSCP+Dpg=";
+  src = fetchFromGitHub {
+    owner = "cdemu";
+    repo = "cdemu";
+    rev = "ee6bba585d53891577089e9dd856eb733d8231f8";
+    hash = "sha256-pCJYwFW2hkh6XTJ/YWgFunhf/F86KIYV6F7qp4io8P0=";
   };
+
+  sourceRoot = "${src.name}/vhba-module";
 
   makeFlags = kernelModuleMakeFlags ++ [
     "KDIR=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
