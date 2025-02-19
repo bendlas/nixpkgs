@@ -14438,7 +14438,7 @@ with pkgs;
   };
 
   openvscode-server = callPackage ../servers/openvscode-server {
-    nodejs = nodejs_20;
+    nodejs = nodejs_22;
   };
 
   code-server = callPackage ../servers/code-server {
