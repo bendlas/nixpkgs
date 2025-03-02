@@ -6,7 +6,7 @@
   git,
   pkg-config,
   boost,
-  eigen,
+  eigen3_4,
   glm,
   libGL,
   libpng,
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
   buildInputs =
     [
       boost
-      eigen
+      eigen3_4
       glm
       libGL
       libpng
