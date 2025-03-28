@@ -72,6 +72,8 @@
   flashinfer,
   py-libnuma,
 
+  python-amdsmi,
+
   awscli,
   boto3,
   botocore,
@@ -132,6 +134,7 @@ let
       rocm-runtime
       clr.icd
       hipify
+      amdsmi
     ];
 
     # Fix `setuptools` not being found
@@ -479,7 +482,11 @@ buildPythonPackage rec {
     cupy
     pynvml
     flashinfer
+  ]
+  ++ lib.optionals rocmSupport [
+    python-amdsmi
   ];
+
 
   dontUseCmakeConfigure = true;
   cmakeFlags = [
@@ -544,6 +551,12 @@ buildPythonPackage rec {
     # updates the cutlass fetcher instead
     skipBulkUpdate = true;
   };
+
+  postFixup =
+    # expose runtime libraries necessary to use the gpu
+    lib.optionalString rocmSupport ''
+      wrapProgram "$out/bin/vllm" --set-default ROCM_PATH '${rocmtoolkit_joined}'
+    '';
 
   meta = {
     description = "High-throughput and memory-efficient inference and serving engine for LLMs";
