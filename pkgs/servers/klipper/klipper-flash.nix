@@ -34,15 +34,16 @@ writeShellApplication {
     ++ lib.optionals (boardArch == "avr") [ avrdude ]
     ++ lib.optionals (boardArch == "stm32") [ stm32flash ];
   text = ''
+    firmwareOut=${klipper-firmware}/share/klipper/firmware/${mcu}
     if ${lib.boolToString (!builtins.elem boardArch supportedArches)}; then
       printf "Flashing Klipper firmware to your board is not supported yet.\n"
-      printf "Please use the compiled firmware at ${klipper-firmware} and flash it using the tools provided for your microcontroller."
+      printf "Please use the compiled firmware at $firmwareOut and flash it using the tools provided for your microcontroller."
       exit 1
     fi
     if ${lib.boolToString (boardArch == "stm32")}; then
-      make -C ${klipper.src} FLASH_DEVICE="${toString flashDevice}" OUT="${klipper-firmware}/" KCONFIG_CONFIG="${klipper-firmware}/config" serialflash
+      make -C ${klipper.src} FLASH_DEVICE="${toString flashDevice}" OUT="$firmwareOut/" KCONFIG_CONFIG="$firmwareOut/config" serialflash
     else
-      make -C ${klipper.src} FLASH_DEVICE="${toString flashDevice}" OUT="${klipper-firmware}/" KCONFIG_CONFIG="${klipper-firmware}/config" flash
+      make -C ${klipper.src} FLASH_DEVICE="${toString flashDevice}" OUT="$firmwareOut/" KCONFIG_CONFIG="$firmwareOut/config" flash
     fi
   '';
 }
