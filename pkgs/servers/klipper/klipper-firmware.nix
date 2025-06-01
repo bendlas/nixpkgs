@@ -45,12 +45,15 @@ stdenv.mkDerivation rec {
     "WXVERSION=3.2"
   ];
 
+  inherit mcu;
+
   installPhase = ''
-    mkdir -p $out
-    cp ./.config $out/config
-    cp out/klipper.bin $out/ || true
-    cp out/klipper.elf $out/ || true
-    cp out/klipper.uf2 $out/ || true
+    installOut=$out/share/klipper/firmware/$mcu
+    mkdir -p $installOut
+    cp ./.config $installOut/config
+    cp out/klipper.bin $installOut/ || true
+    cp out/klipper.elf $installOut/ || true
+    cp out/klipper.uf2 $installOut/ || true
   '';
 
   dontFixup = true;
