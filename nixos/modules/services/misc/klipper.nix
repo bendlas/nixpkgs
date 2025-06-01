@@ -251,6 +251,7 @@ in
         );
       };
 
+    environment.pathsToLink = [ "/share/klipper" ];
     environment.systemPackages =
       let
         default = a: b: if a != null then a else b;
