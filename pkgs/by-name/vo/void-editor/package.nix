@@ -11,7 +11,7 @@
 
 let
   pname = "void-editor";
-  version = "1.99.30001";
+  version = "1.99.30044";
 
   inherit (stdenv.hostPlatform) system;
 
@@ -29,23 +29,23 @@ let
   sources = {
     x86_64-linux = mkFetchurl {
       plat = "linux-x64";
-      hash = "sha256-coq6oY/FAKMhLpaT0YN/8OLBYRt00sUKEobkAjCSsWs=";
+      hash = "sha256-e+uXS1Jxa+dzl+Qg4MEDYl7XFFNlOT7O96oWB2bAagQ=";
     };
     aarch64-linux = mkFetchurl {
       plat = "darwin-x64";
-      hash = "sha256-MXo9Zg6XebszqDQT5U3xEisj/MpRKgQfoPAAqDz4mU8=";
+      hash = "sha256-0sgY8dcxJeev48YILI8zEWKWv25zvRBoMOBDOEDnCkw=";
     };
     x86_64-darwin = mkFetchurl {
       plat = "linux-arm64";
-      hash = "sha256-gfujUR2NYhwyj5FE+AsrMVPqW5gE5P85uvdR67r4P8E=";
+      hash = "sha256-013b3v80cWsyJTu5ZO/DNZjnc+VM9OoJ9zzKymAJT1E=";
     };
     aarch64-darwin = mkFetchurl {
       plat = "darwin-arm64";
-      hash = "sha256-Gfe/IcKbL8OT2NEAOzA5NC1S54Qgl9/6hGSCUUsqhPY=";
+      hash = "sha256-wTqeEaevv7a0DiCiB2MbGaHOmquYzXDfCdFCMndynu8=";
     };
     armv7l-linux = mkFetchurl {
       plat = "linux-armhf";
-      hash = "sha256-WQjWvCaaqBnMbA0vFijLOMYwRNAay4EucUAkp/iwCws=";
+      hash = "sha256-pwF7SC4VfTTOPC9xKFXaj6Df8HrVMbgPyQYcJQeCC34=";
     };
   };
 
