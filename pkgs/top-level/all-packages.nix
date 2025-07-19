@@ -9471,10 +9471,17 @@ with pkgs;
   # Temporarily use python 3.12
   # See: https://github.com/vllm-project/vllm/issues/12083
   vllm = with python312Packages; toPythonApplication vllm;
-  vllmWithRocm = vllm.override {
-    torch = python312Packages.torchWithRocm.override {
-      rocmPackages = rocmPackages.override {
-        python3Packages = python312Packages;
+  vllmWithRocm = let
+    python3Packages = python312Packages;
+    rocmPackages = pkgs.rocmPackages.override {
+      inherit python3Packages;
+    };
+  in vllm.override {
+    torch = python3Packages.torchWithRocm.override {
+      inherit rocmPackages;
+      _tritonEffective = python3Packages.triton.override {
+        rocmSupport = true;
+        inherit rocmPackages;
       };
     };
   };
