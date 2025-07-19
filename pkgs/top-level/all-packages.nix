@@ -9471,6 +9471,13 @@ with pkgs;
   # Temporarily use python 3.12
   # See: https://github.com/vllm-project/vllm/issues/12083
   vllm = with python312Packages; toPythonApplication vllm;
+  vllmWithRocm = vllm.override {
+    torch = python312Packages.torchWithRocm.override {
+      rocmPackages = rocmPackages.override {
+        python3Packages = python312Packages;
+      };
+    };
+  };
 
   vte-gtk4 = vte.override {
     gtkVersion = "4";
