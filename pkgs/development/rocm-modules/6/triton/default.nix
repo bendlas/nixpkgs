@@ -45,7 +45,8 @@
       substituteInPlace python/setup.py \
         --replace-fail "[get_json_package_info()]" "[]"\
         --replace-fail "[get_llvm_package_info()]" "[]"\
-        --replace-fail "curr_version != version" "False"
+        --replace-fail 'packages += ["triton/profiler"]' "pass"\
+        --replace-fail "curr_version.group(1) != version" "False"
       # Don't fetch googletest
       substituteInPlace cmake/AddTritonUnitTest.cmake \
         --replace-fail 'include(''${PROJECT_SOURCE_DIR}/unittest/googletest.cmake)' "" \
