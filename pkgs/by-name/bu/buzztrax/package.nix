@@ -33,8 +33,6 @@ stdenv.mkDerivation {
 
   # Fix function pointer type mismatch by casting to xmlStructuredErrorFunc
   postPatch = ''
-    substituteInPlace src/lib/core/core.c \
-      --replace-fail "xmlSetStructuredErrorFunc (NULL, &bt_libxml_error_func);" "xmlSetStructuredErrorFunc (NULL, (xmlStructuredErrorFunc)bt_libxml_error_func);"
     touch AUTHORS
   '';
 
