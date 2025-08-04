@@ -33,8 +33,6 @@ stdenv.mkDerivation {
 
   # Fix function pointer type mismatch by casting to xmlStructuredErrorFunc
   postPatch = ''
-    substituteInPlace src/lib/core/core.c \
-      --replace-fail "xmlSetStructuredErrorFunc (NULL, &bt_libxml_error_func);" "xmlSetStructuredErrorFunc (NULL, (xmlStructuredErrorFunc)bt_libxml_error_func);"
     touch AUTHORS
   '';
 
@@ -67,7 +65,7 @@ stdenv.mkDerivation {
 
   # 'g_memdup' is deprecated: Use 'g_memdup2' instead
   env.NIX_CFLAGS_COMPILE =
-    "-Wno-error=deprecated-declarations"
+    "-Wno-error=deprecated-declarations -Wno-error=incompatible-pointer-types"
     # Suppress incompatible function pointer error in clang due to libxml2 2.12 const changes
     + lib.optionalString stdenv.cc.isClang " -Wno-error=incompatible-function-pointer-types";
 
