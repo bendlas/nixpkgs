@@ -74,7 +74,7 @@ let
 
     ## FIXME also need to patch some source files
     postPatch = ''
-      substituteInPlace acinclude.m4 --replace 'attr/xattr.h' 'sys/xattr.h'
+      substituteInPlace acinclude.m4 --replace-fail 'attr/xattr.h' 'sys/xattr.h'
     '';
 
     preConfigure = ''
@@ -85,15 +85,17 @@ let
     preBuild = ''
       make stamps/extract.stamp
 
-      substituteInPlace openjdk/corba/make/common/shared/Defs-utils.gmk --replace '/bin/echo' '${coreutils}/bin/echo'
-      substituteInPlace openjdk/jdk/make/common/shared/Defs-utils.gmk --replace '/bin/echo' '${coreutils}/bin/echo'
+      substituteInPlace openjdk/corba/make/common/shared/Defs-utils.gmk --replace-fail '/bin/echo' '${coreutils}/bin/echo'
+      substituteInPlace openjdk/jdk/make/common/shared/Defs-utils.gmk --replace-fail '/bin/echo' '${coreutils}/bin/echo'
 
       patch -p0 < ${./cppflags-include-fix.patch}
       patch -p0 < ${./fix-java-home.patch}
+
+      touch openjdk/jdk/src/solaris/classes/sun/awt/fontconfigs/linux.fontconfig.Gentoo.properties
     '';
 
     patches = [
-      # ./0001-make-jpeg-6b-optional.patch
+      ./0001-make-jpeg-6b-optional.patch
     ];
 
     NIX_NO_SELF_RPATH = true;
