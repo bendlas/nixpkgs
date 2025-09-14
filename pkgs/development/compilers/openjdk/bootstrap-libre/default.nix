@@ -38,6 +38,7 @@ lib.makeScope newScope (self: with self; {
       })
     ];
 
+    env.NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration";
     nativeBuildInputs = [ jikes_1_22 fastjar libtool pkg-config ];
     configureFlags = [
       "JAVAC=${jikes_1_22}/bin/jikes"
@@ -78,6 +79,7 @@ lib.makeScope newScope (self: with self; {
         hash = "sha256-l5rWRHnXZCjcvopTrFVZlACkef4/hw03pLLUininiV0=";
       })
     ];
+    env.NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types";
     ## FIXME only necessary for arm support?
     preConfigure = ''
       autoreconf -vif
@@ -252,7 +254,10 @@ lib.makeScope newScope (self: with self; {
 
   inherit (pkgs) fetchFromGitHub lib wget cpio file libxslt procps which perl
     coreutils binutils cacert libjpeg libpng giflib lcms2
-    kerberos attr alsaLib cups gtk2 setJavaClassPath;
+    attr cups gtk2 setJavaClassPath;
+
+  alsaLib = pkgs.alsa-lib;
+  kerberos = pkgs.krb5;
 
   inherit (pkgs.xorg) libX11 libXtst lndir libXt;
 
