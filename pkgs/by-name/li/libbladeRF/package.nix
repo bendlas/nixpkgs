@@ -57,6 +57,7 @@ stdenv.mkDerivation rec {
 
   cmakeFlags = [
     "-DBUILD_DOCUMENTATION=ON"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [
     "-DUDEV_RULES_PATH=etc/udev/rules.d"
