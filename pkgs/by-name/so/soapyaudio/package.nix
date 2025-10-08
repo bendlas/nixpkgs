@@ -43,6 +43,7 @@ stdenv.mkDerivation rec {
   cmakeFlags = [
     "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/"
     "-DUSE_HAMLIB=ON"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
   ];
 
   meta = with lib; {
