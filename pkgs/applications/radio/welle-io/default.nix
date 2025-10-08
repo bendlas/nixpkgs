@@ -67,6 +67,7 @@ stdenv.mkDerivation (finalAttrs: {
   cmakeFlags = [
     "-DRTLSDR=true"
     "-DSOAPYSDR=true"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
   ]
   ++ lib.optional withFlac "-DFLAC=true";
 
