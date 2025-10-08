@@ -32,7 +32,10 @@ stdenv.mkDerivation {
     soapysdr
   ];
 
-  cmakeFlags = [ "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/" ];
+  cmakeFlags = [
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+    "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/"
+  ];
 
   meta = with lib; {
     homepage = "https://github.com/pothosware/SoapyBladeRF";
