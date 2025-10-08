@@ -25,6 +25,10 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ cmake ];
 
+  cmakeFlags = [
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+  ];
+
   buildInputs = [ libiio ];
 
   postPatch = lib.optionalString stdenv.hostPlatform.isDarwin ''
