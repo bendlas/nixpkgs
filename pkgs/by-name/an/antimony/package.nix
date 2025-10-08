@@ -16,19 +16,19 @@
 }:
 
 let
-  gitRev = "8b805c674adad536f9dd552b4be75fadcb3c7db6";
+  gitRev = "28d444402b88a51aa8a14dfdbe5869101fb73426";
   gitBranch = "develop";
   gitTag = "0.9.3";
 in
 stdenv.mkDerivation {
   pname = "antimony";
-  version = "2022-11-23";
+  version = "2025-10-03";
 
   src = fetchFromGitHub {
     owner = "mkeeter";
     repo = "antimony";
     rev = gitRev;
-    sha256 = "NmOuBewfHqtAim2cNP62LXgRjVWuVUGweV46sY1qjGk=";
+    sha256 = "sha256-RKxPIIs7ByjMLp32zDAtK0IYYAk1MaMo6JX9SZSTfpQ=";
   };
 
   patches = [ ./paths-fix.patch ];
@@ -87,6 +87,7 @@ stdenv.mkDerivation {
     "-DGITREV=${gitRev}"
     "-DGITTAG=${gitTag}"
     "-DGITBRANCH=${gitBranch}"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
   ];
 
   meta = {
