@@ -30,7 +30,9 @@ stdenv.mkDerivation rec {
   doInstallCheck = true;
   buildInputs = [ libusb1 ];
 
-  cmakeFlags = lib.optionals stdenv.hostPlatform.isLinux [ "-DINSTALL_UDEV_RULES=ON" ];
+  cmakeFlags = [
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+  ] ++ lib.optionals stdenv.hostPlatform.isLinux [ "-DINSTALL_UDEV_RULES=ON" ];
 
   meta = with lib; {
     homepage = "https://github.com/airspy/airspyone_host";
