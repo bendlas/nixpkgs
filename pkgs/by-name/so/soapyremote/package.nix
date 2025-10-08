@@ -28,7 +28,10 @@ stdenv.mkDerivation {
     avahi
   ];
 
-  cmakeFlags = [ "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/" ];
+  cmakeFlags = [
+    "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+  ];
 
   env.NIX_CFLAGS_COMPILE = toString (
     lib.optionals stdenv.hostPlatform.isDarwin [ "-include sys/select.h" ]
