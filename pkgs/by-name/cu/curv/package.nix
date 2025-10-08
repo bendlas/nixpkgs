@@ -58,6 +58,10 @@ stdenv.mkDerivation {
     llvmPackages.openmp
   ];
 
+  cmakeFlags = [
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+  ];
+
   # force char to be unsigned on aarch64
   # https://codeberg.org/doug-moen/curv/issues/227
   NIX_CFLAGS_COMPILE = [ "-fsigned-char" ];
