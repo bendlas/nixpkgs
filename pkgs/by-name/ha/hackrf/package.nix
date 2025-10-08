@@ -30,6 +30,7 @@ stdenv.mkDerivation rec {
   ];
 
   cmakeFlags = [
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
     "-DUDEV_RULES_GROUP=plugdev"
     "-DUDEV_RULES_PATH=lib/udev/rules.d"
   ];
