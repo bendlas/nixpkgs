@@ -32,7 +32,10 @@ stdenv.mkDerivation {
     soapysdr
   ];
 
-  cmakeFlags = [ "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/" ];
+  cmakeFlags = [
+    "-DSoapySDR_DIR=${soapysdr}/share/cmake/SoapySDR/"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+  ];
 
   meta = with lib; {
     homepage = "https://github.com/pothosware/SoapyHackRF";
