@@ -29,6 +29,7 @@ stdenv.mkDerivation rec {
 
   cmakeFlags = [
     "-DOpenGL_GL_PREFERENCE=GLVND"
+    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
   ]
   ++ lib.optional (!withGui) "-DENABLE_GUI=OFF";
 
