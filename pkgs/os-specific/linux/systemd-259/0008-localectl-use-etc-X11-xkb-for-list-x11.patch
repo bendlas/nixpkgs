@@ -1,0 +1,27 @@
+From 5105a4ce337f29cd69442c90509c48e8a17fea7c Mon Sep 17 00:00:00 2001
+From: Imuli <i@imu.li>
+Date: Wed, 19 Oct 2016 08:46:47 -0400
+Subject: [PATCH 08/20] localectl: use /etc/X11/xkb for list-x11-*
+
+NixOS has an option to link the xkb data files to /etc/X11, but not to
+/usr/share/X11.
+---
+ src/locale/localectl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/locale/localectl.c b/src/locale/localectl.c
+index 63703007ad..50def81940 100644
+--- a/src/locale/localectl.c
++++ b/src/locale/localectl.c
+@@ -295,7 +295,7 @@ static const char* xkb_directory(void) {
+         static const char *cached = NULL;
+ 
+         if (!cached)
+-                cached = secure_getenv("SYSTEMD_XKB_DIRECTORY") ?: "/usr/share/X11/xkb";
++                cached = secure_getenv("SYSTEMD_XKB_DIRECTORY") ?: "/etc/X11/xkb";
+         return cached;
+ }
+ 
+-- 
+2.51.2
+
