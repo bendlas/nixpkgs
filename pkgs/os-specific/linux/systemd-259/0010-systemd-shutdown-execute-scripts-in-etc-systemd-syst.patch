@@ -1,0 +1,26 @@
+From 6184d97d99ff859d7224f73c1ac3395e019c8004 Mon Sep 17 00:00:00 2001
+From: Nikolay Amiantov <ab@fmap.me>
+Date: Thu, 25 Jul 2019 20:45:55 +0300
+Subject: [PATCH 10/20] systemd-shutdown: execute scripts in
+ /etc/systemd/system-shutdown
+
+This is needed for NixOS to use such scripts as systemd directory is immutable.
+---
+ src/shutdown/shutdown.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/shutdown/shutdown.c b/src/shutdown/shutdown.c
+index 97ae7d119c..4fb4f19e2f 100644
+--- a/src/shutdown/shutdown.c
++++ b/src/shutdown/shutdown.c
+@@ -331,6 +331,7 @@ static void notify_supervisor(void) {
+ int main(int argc, char *argv[]) {
+         static const char* const dirs[] = {
+                 SYSTEM_SHUTDOWN_PATH,
++                "/etc/systemd/system-shutdown",
+                 NULL
+         };
+         _cleanup_free_ char *cgroup = NULL;
+-- 
+2.51.2
+
