@@ -10163,6 +10163,15 @@ with pkgs;
       guiSupport = false;
     };
   };
+  systemd_259 = callPackage ../os-specific/linux/systemd-259 {
+    # break some cyclic dependencies
+    util-linux = util-linuxMinimal;
+    # provide a super minimal gnupg used for systemd-machined
+    gnupg = gnupg.override {
+      enableMinimal = true;
+      guiSupport = false;
+    };
+  };
   systemdMinimal = systemd.override {
     pname = "systemd-minimal";
     withAcl = false;
