@@ -1,0 +1,24 @@
+From fc70606f119ad1ebbabe5ccdf6c058f7f4148c19 Mon Sep 17 00:00:00 2001
+From: nikstur <nikstur@outlook.com>
+Date: Mon, 6 Nov 2023 22:51:38 +0100
+Subject: [PATCH 17/20] meson.build: do not create systemdstatedir
+
+---
+ meson.build | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 65191c3511..eac1bf3b8b 100644
+--- a/meson.build
++++ b/meson.build
+@@ -2878,7 +2878,6 @@ install_data('LICENSE.GPL2',
+ install_subdir('LICENSES',
+                install_dir : docdir)
+ 
+-install_emptydir(systemdstatedir)
+ 
+ #####################################################################
+ 
+-- 
+2.51.2
+
