@@ -14,10 +14,11 @@
       systemd.services.netcat-server = {
         description = "Netcat server for container networking test";
         wantedBy = [ "multi-user.target" ];
+        before = [ "container@test-container.service" ];
         after = [ "network.target" ];
         serviceConfig = {
           Type = "simple";
-          ExecStart = "${pkgs.netcat}/bin/nc -l -p 8080 -k";
+          ExecStart = "${pkgs.bash}/bin/bash -c 'while true; do echo \"READY\" | ${pkgs.netcat}/bin/nc -l -p 8080; done'";
           Restart = "always";
         };
       };
@@ -46,11 +47,12 @@
             };
             
             script = ''
-              echo "Attempting to connect to host's netcat server..."
-              if ${pkgs.netcat}/bin/nc -z 192.168.100.1 8080; then
-                echo "Successfully connected to host! Container networking is up."
+              echo "Attempting to read from host's netcat server..."
+              response=$(echo | ${pkgs.netcat}/bin/nc 192.168.100.1 8080)
+              if [ "$response" = "READY" ]; then
+                echo "Successfully read from host! Container networking is up."
               else
-                echo "Failed to connect to host. Retrying..."
+                echo "Failed to read from host. Retrying..."
                 exit 1
               fi
             '';
@@ -79,7 +81,8 @@
         machine.succeed("nixos-container run test-container -- systemctl status network-check.service")
     
     with subtest("Verify container can communicate with host"):
-        # Double-check that the container can actually reach the host
-        machine.succeed("nixos-container run test-container -- nc -z 192.168.100.1 8080")
+        # Double-check that the container can actually reach the host and read data
+        result = machine.succeed("nixos-container run test-container -- sh -c 'echo | nc 192.168.100.1 8080'")
+        assert "READY" in result, f"Expected 'READY' in response but got: {result}"
   '';
 }
