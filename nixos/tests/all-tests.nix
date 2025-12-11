@@ -464,6 +464,7 @@ in
     imports = [ ./containers-nested.nix ];
     params.nix = true;
   };
+  containers-networking-startup = runTest ./containers-networking-startup.nix;
   containers-physical_interfaces = runTest ./containers-physical_interfaces.nix;
   containers-portforward = runTest ./containers-portforward.nix;
   containers-reloadable = runTest ./containers-reloadable.nix;
