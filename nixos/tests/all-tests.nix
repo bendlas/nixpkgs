@@ -400,6 +400,7 @@ in
   containers-macvlans = runTest ./containers-macvlans.nix;
   containers-names = runTest ./containers-names.nix;
   containers-nested = runTest ./containers-nested.nix;
+  containers-networking-startup = runTest ./containers-networking-startup.nix;
   containers-physical_interfaces = runTest ./containers-physical_interfaces.nix;
   containers-portforward = runTest ./containers-portforward.nix;
   containers-reloadable = runTest ./containers-reloadable.nix;
