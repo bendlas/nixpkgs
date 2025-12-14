@@ -908,6 +908,8 @@ stdenv.mkDerivation (finalAttrs: {
     # needed - and therefore `interfaceVersion` should be incremented.
     interfaceVersion = 2;
 
+    withNspawn = true;
+
     inherit
       withBootloader
       withCryptsetup
