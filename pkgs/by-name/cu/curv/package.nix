@@ -1,6 +1,6 @@
 {
   lib,
-  stdenv,
+  gcc14Stdenv,
   fetchFromGitea,
   cmake,
   git,
@@ -19,7 +19,9 @@
   llvmPackages,
   unstableGitUpdater,
 }:
-
+# build with gcc14 until curv has caught up
+# see https://codeberg.org/doug-moen/curv/issues/269
+let stdenv = gcc14Stdenv; in
 stdenv.mkDerivation {
   pname = "curv";
   version = "0.5-unstable-2026-01-04";
