@@ -80,8 +80,9 @@ in
       [ "services" "resolved" "settings" "Resolve" "DNSOverTLS" ]
     )
     {
-      warnings = optional (cfg.extraConfig != "")
-        "services.resolved.extraConfig is deprecated; use services.resolved.settings.Resolve";
+      warnings = optional (
+        cfg.extraConfig != ""
+      ) "services.resolved.extraConfig is deprecated; use services.resolved.settings.Resolve";
     }
   ];
 
