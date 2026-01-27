@@ -389,7 +389,7 @@ rec {
         # Copy the upstream systemd units we're interested in.
         for i in ${toString upstreamUnits}; do
           fn=${package}/example/systemd/${typeDir}/$i
-          if ! [ -e $fn ]; then echo "missing $fn"; false; fi
+          if ! [ -e $fn ]; then echo "missing $fn; ignoring"; continue; fi
           if [ -L $fn ]; then
             target="$(readlink "$fn")"
             if [ ''${target:0:3} = ../ ]; then
@@ -406,7 +406,7 @@ rec {
         # we're interested in.
         for i in ${toString upstreamWants}; do
           fn=${package}/example/systemd/${typeDir}/$i
-          if ! [ -e $fn ]; then echo "missing $fn"; false; fi
+          if ! [ -e $fn ]; then echo "missing $fn; ignoring"; continue; fi
           x=$out/$(basename $fn)
           mkdir $x
           for i in $fn/*; do
