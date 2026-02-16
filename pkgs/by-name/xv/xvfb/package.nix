@@ -3,6 +3,8 @@
 {
   lib,
   stdenv,
+  meson,
+  ninja,
   pkg-config,
   xorg-server,
   dri-pkgconfig-stub,
@@ -29,6 +31,9 @@
   xkeyboard-config,
   xorgproto,
   xtrans,
+  fontutil,
+  udev,
+  libtirpc,
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "xvfb";
@@ -37,12 +42,18 @@ stdenv.mkDerivation (finalAttrs: {
 
   strictDeps = true;
 
-  nativeBuildInputs = [ pkg-config ];
+  nativeBuildInputs = [
+    meson
+    ninja
+    pkg-config
+  ];
 
   buildInputs = [
     dri-pkgconfig-stub
+    fontutil
     libdrm
     libGL
+    libtirpc
     libx11
     libxau
     libxcb
@@ -60,20 +71,30 @@ stdenv.mkDerivation (finalAttrs: {
     libxcb-keysyms
     libxcb-render-util
     libxcb-wm
+    udev
     xorgproto
     xtrans
   ];
 
-  configureFlags = [
-    "--enable-xvfb"
-    "--disable-xorg"
-    "--disable-xquartz"
-    "--disable-xwayland"
-    "--with-xkb-bin-directory=${xkbcomp}/bin"
-    "--with-xkb-path=${xkeyboard-config}/share/X11/xkb"
-    "--with-xkb-output=$out/share/X11/xkb/compiled"
+  mesonFlags = [
+    "-Dxvfb=true"
+    "-Dxephyr=false"
+    "-Dxorg=false"
+    "-Dxnest=false"
+
+    "-Dlog_dir=/var/log"
+    "-Ddefault_font_path="
+
+    "-Dxkb_bin_dir=${xkbcomp}/bin"
+    "-Dxkb_dir=${xkeyboard-config}/share/X11/xkb"
+    "-Dxkb_output_dir=$out/share/X11/xkb/compiled"
   ]
-  ++ lib.optional stdenv.hostPlatform.isDarwin "--without-dtrace";
+  ++ lib.optionals (!stdenv.hostPlatform.isDarwin) [
+    "-Dxcsecurity=true"
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    "-Ddtrace=false"
+  ];
 
   meta = {
     description = "X virtual framebuffer";
