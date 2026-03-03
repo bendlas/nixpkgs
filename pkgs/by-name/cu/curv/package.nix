@@ -5,7 +5,7 @@
   cmake,
   git,
   pkg-config,
-  boost,
+  boost188,
   eigen_5,
   glm,
   gcc,
@@ -46,7 +46,8 @@ stdenv.mkDerivation {
   ];
 
   buildInputs = [
-    boost
+    ## boost 1.88, because with 1.89: Could not find a package configuration file provided by "boost_system"
+    boost188
     eigen_5
     glm
     libGL
