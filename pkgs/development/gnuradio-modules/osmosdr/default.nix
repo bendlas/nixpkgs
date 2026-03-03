@@ -34,6 +34,12 @@ mkDerivation rec {
     hash = "sha256-jCUzBY1pYiEtcRQ97t9F6uEMVYw2NU0eoB5Xc2H6pGQ=";
   };
 
+  ## fix build for boost 1.89: no system any more
+  postPatch = ''
+    substituteInPlace CMakeLists.txt \
+      --replace-fail 'find_package(Boost "1.65" REQUIRED chrono thread system)' 'find_package(Boost "1.65" REQUIRED chrono thread)'
+  '';
+
   disabled = gnuradioAtLeast "3.11";
 
   outputs = [
