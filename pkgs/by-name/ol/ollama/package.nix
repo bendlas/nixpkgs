@@ -2,6 +2,7 @@
   lib,
   buildGoModule,
   fetchFromGitHub,
+  fetchpatch,
   buildEnv,
   makeBinaryWrapper,
   stdenv,
@@ -182,6 +183,13 @@ goBuild (finalAttrs: {
     ++ lib.optionals enableCuda cudaLibs
     ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk_15 ]
     ++ lib.optionals enableVulkan vulkanLibs;
+
+  patches = [
+    (fetchpatch {
+      url = "https://github.com/ollama/ollama/pull/14864.patch";
+      hash = "sha256-huonmotrEn8kb5JRdMK7B5+aqFuKURIf0v7oQhWnQTw=";
+    })
+  ];
 
   # replace inaccurate version number with actual release version
   postPatch = ''
