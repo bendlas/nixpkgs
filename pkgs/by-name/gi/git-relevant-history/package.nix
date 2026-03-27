@@ -9,13 +9,13 @@
 
 python3.pkgs.buildPythonApplication {
   pname = "git-relevant-history";
-  version = "1.0.0-unstable-2022-09-15";
+  version = "1.0.0-unstable-2026-03-25";
   format = "setuptools";
   src = fetchFromGitHub {
-    owner = "rainlabs-eu";
+    owner = "bendlas";
     repo = "git-relevant-history";
-    rev = "84552324d7cb4790db86282fc61bf98a05b7a4fd";
-    hash = "sha256-46a6TR1Hi3Lg2DTmOp1aV5Uhd4IukTojZkA3TVbTnRY=";
+    rev = "7a77a560afcfa6bee399157f781f2d5ebc3eefd3";
+    hash = "sha256-uXlh6lXH7lImQMgG2fDIP9Mnmq7crOE3Le3KB+niswQ=";
   };
   propagatedBuildInputs = [
     git
