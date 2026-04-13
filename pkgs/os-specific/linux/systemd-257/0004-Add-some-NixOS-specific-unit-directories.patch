@@ -1,7 +1,7 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 55d622bbadc1689e656071b635f8cf2daae9feb9 Mon Sep 17 00:00:00 2001
 From: Raito Bezarius <masterancpp@gmail.com>
 Date: Mon, 19 Jun 2023 02:13:42 +0200
-Subject: [PATCH] Add some NixOS-specific unit directories
+Subject: [PATCH 04/20] Add some NixOS-specific unit directories
 
 Look in `/nix/var/nix/profiles/default/lib/systemd/{system,user}` for
 units provided by packages installed into the default profile via
@@ -127,3 +127,6 @@ index a3b09208cb..91a085c6bc 100644
          USER_ENV_GENERATOR_DIR,
          NULL,
  };
+-- 
+2.53.0
+
