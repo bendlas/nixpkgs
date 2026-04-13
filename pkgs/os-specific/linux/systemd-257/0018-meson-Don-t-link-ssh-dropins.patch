@@ -1,14 +1,14 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From cb0c688db1b58764d2bd53625ad3b333b1d04feb Mon Sep 17 00:00:00 2001
 From: Marie Ramlow <me@nycode.dev>
 Date: Sun, 24 Nov 2024 20:04:35 +0100
-Subject: [PATCH] meson: Don't link ssh dropins
+Subject: [PATCH 18/20] meson: Don't link ssh dropins
 
 ---
  meson.build | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index b5aaecd669..91b23f2d72 100644
+index c9d8c2a065..9e882e4099 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -207,13 +207,13 @@ sshconfdir = get_option('sshconfdir')
@@ -27,3 +27,6 @@ index b5aaecd669..91b23f2d72 100644
  
  sshdprivsepdir = get_option('sshdprivsepdir')
  conf.set10('CREATE_SSHDPRIVSEPDIR', sshdprivsepdir != 'no' and not sshdprivsepdir.startswith('/usr/'))
+-- 
+2.53.0
+

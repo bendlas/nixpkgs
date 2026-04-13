@@ -199,11 +199,11 @@ let
   # command:
   #  $ curl -s https://api.github.com/repos/systemd/systemd/releases/latest | \
   #     jq '.created_at|strptime("%Y-%m-%dT%H:%M:%SZ")|mktime'
-  releaseTimestamp = "1760385176";
+  releaseTimestamp = "1773427016";
 in
 stdenv.mkDerivation (finalAttrs: {
   inherit pname;
-  version = "257.10";
+  version = "257.13";
 
   # We use systemd/systemd-stable for src, and ship NixOS-specific patches inside nixpkgs directly
   # This has proven to be less error-prone than the previous systemd fork.
@@ -211,7 +211,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "systemd";
     repo = "systemd";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-08zGfnHzHjTupg7xjyGrauVxPwj5hNQDPHkuFNjNjec=";
+    hash = "sha256-VcZUzWiNcK9rXyM5GQTY6W7QZEQ6iEDNJ0uMVgdbEKY=";
   };
 
   # On major changes, or when otherwise required, you *must* :
