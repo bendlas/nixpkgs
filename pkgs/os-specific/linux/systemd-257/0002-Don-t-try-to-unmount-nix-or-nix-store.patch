@@ -1,7 +1,7 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 57f5d1971282bf7c9978dc2a7ef863fca5d9ccdd Mon Sep 17 00:00:00 2001
 From: Raito Bezarius <masterancpp@gmail.com>
 Date: Mon, 19 Jun 2023 02:11:35 +0200
-Subject: [PATCH] Don't try to unmount /nix or /nix/store
+Subject: [PATCH 02/20] Don't try to unmount /nix or /nix/store
 
 They'll still be remounted read-only.
 
@@ -43,3 +43,6 @@ index 84da5eed63..d6e2f36d52 100644
  }
  
  static void log_umount_blockers(const char *mnt) {
+-- 
+2.53.0
+

@@ -1,7 +1,8 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 590e57942fdc51b0490a052bdee90ce9c9f1aa0b Mon Sep 17 00:00:00 2001
 From: Yuri Nesterov <yuriy.nesterov@unikie.com>
 Date: Wed, 21 Jun 2023 17:17:38 +0300
-Subject: [PATCH] timesyncd: disable NSCD when DNSSEC validation is disabled
+Subject: [PATCH 20/20] timesyncd: disable NSCD when DNSSEC validation is
+ disabled
 
 Systemd-timesyncd sets SYSTEMD_NSS_RESOLVE_VALIDATE=0 in the unit file
 to disable DNSSEC validation but it doesn't work when NSCD is used in
@@ -41,3 +42,6 @@ index d002501d29..9b835dc031 100644
          log_debug("systemd-timesyncd running as pid " PID_FMT, getpid_cached());
  
          notify_message = notify_start("READY=1\n"
+-- 
+2.53.0
+

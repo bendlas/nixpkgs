@@ -1,7 +1,7 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 65dac229f971af70f51bf979cf5c05342ba17571 Mon Sep 17 00:00:00 2001
 From: Nick Cao <nickcao@nichi.co>
 Date: Sun, 15 Jan 2023 20:15:55 +0800
-Subject: [PATCH] tpm2_context_init: fix driver name checking
+Subject: [PATCH 15/20] tpm2_context_init: fix driver name checking
 
 https://github.com/systemd/systemd/commit/542dbc623e introduced
 additional checks for tpm2 driver names, namely ensuring the driver
@@ -27,7 +27,7 @@ filename_is_valid with path_is_valid.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/shared/tpm2-util.c b/src/shared/tpm2-util.c
-index 5b6b3ea93c..8ab04241b6 100644
+index 09272b1f81..132a0a48ed 100644
 --- a/src/shared/tpm2-util.c
 +++ b/src/shared/tpm2-util.c
 @@ -721,7 +721,7 @@ int tpm2_context_new(const char *device, Tpm2Context **ret_context) {
@@ -39,3 +39,6 @@ index 5b6b3ea93c..8ab04241b6 100644
                          return log_debug_errno(SYNTHETIC_ERRNO(EINVAL), "TPM2 driver name '%s' not valid, refusing.", driver);
  
                  context->tcti_dl = dlopen(fn, RTLD_NOW|RTLD_NODELETE);
+-- 
+2.53.0
+

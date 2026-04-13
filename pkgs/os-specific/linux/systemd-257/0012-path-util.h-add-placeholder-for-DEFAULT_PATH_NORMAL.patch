@@ -1,29 +1,34 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From fb1b841e5f5b1dc1ccf2da1cdbfdeae3d3a074b9 Mon Sep 17 00:00:00 2001
 From: Florian Klink <flokli@flokli.de>
 Date: Sun, 8 Mar 2020 01:05:54 +0100
-Subject: [PATCH] path-util.h: add placeholder for DEFAULT_PATH_NORMAL
+Subject: [PATCH 12/20] path-util.h: add placeholder for DEFAULT_PATH_NORMAL
 
 This will be the $PATH used to lookup ExecStart= etc. options, which
 systemd itself uses extensively.
 ---
- src/basic/path-util.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ src/basic/path-util.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/src/basic/path-util.h b/src/basic/path-util.h
-index dff5a3a549..01344e5cf6 100644
+index 91b2c997bf..7a66373263 100644
 --- a/src/basic/path-util.h
 +++ b/src/basic/path-util.h
-@@ -17,10 +17,10 @@
+@@ -17,11 +17,11 @@
  #define PATH_MERGED_BIN(x) x "bin"
  #define PATH_MERGED_BIN_NULSTR(x) x "bin\0"
  
--#define DEFAULT_PATH_WITH_SBIN PATH_SPLIT_BIN("/usr/local/") ":" PATH_SPLIT_BIN("/usr/")
+-#define DEFAULT_PATH_WITH_FULL_SBIN PATH_SPLIT_BIN("/usr/local/") ":" PATH_SPLIT_BIN("/usr/")
+-#define DEFAULT_PATH_WITH_LOCAL_SBIN PATH_SPLIT_BIN("/usr/local/") ":" PATH_MERGED_BIN("/usr/")
 -#define DEFAULT_PATH_WITHOUT_SBIN PATH_MERGED_BIN("/usr/local/") ":" PATH_MERGED_BIN("/usr/")
-+#define DEFAULT_PATH_WITH_SBIN "@defaultPathNormal@"
-+#define DEFAULT_PATH_WITHOUT_SBIN DEFAULT_PATH_WITH_SBIN
++#define DEFAULT_PATH_WITH_FULL_SBIN "@defaultPathNormal@"
++#define DEFAULT_PATH_WITH_LOCAL_SBIN DEFAULT_PATH_WITH_FULL_SBIN
++#define DEFAULT_PATH_WITHOUT_SBIN DEFAULT_PATH_WITH_FULL_SBIN
  
--#define DEFAULT_PATH_COMPAT PATH_SPLIT_BIN("/usr/local/") ":" PATH_SPLIT_BIN("/usr/") ":" PATH_SPLIT_BIN("/")
-+#define DEFAULT_PATH_COMPAT DEFAULT_PATH_WITH_SBIN
+-#define DEFAULT_PATH_COMPAT DEFAULT_PATH_WITH_FULL_SBIN ":" PATH_SPLIT_BIN("/")
++#define DEFAULT_PATH_COMPAT DEFAULT_PATH_WITH_FULL_SBIN
  
  const char* default_PATH(void);
  
+-- 
+2.53.0
+
