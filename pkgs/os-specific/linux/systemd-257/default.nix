@@ -824,6 +824,16 @@ stdenv.mkDerivation (finalAttrs: {
         substituteInPlace $i --replace /bin/false ${coreutils}/bin/false
       done
 
+      for p in $out/lib/systemd/{systemd-factory-reset,system-generators/{systemd-debug-generator,systemd-fstab-generator,systemd-gpt-auto-generator,systemd-hibernate-resume-generator,systemd-run-generator,systemd-factory-reset-generator}}
+      do
+        if [ -e $p ]
+        then
+          echo >&2 "Path exists: $p"
+        else
+          ln -s ${coreutils}/bin/false $p
+        fi
+      done
+
       # For compatibility with dependents that use sbin instead of bin.
       ln -s bin "$out/sbin"
 
