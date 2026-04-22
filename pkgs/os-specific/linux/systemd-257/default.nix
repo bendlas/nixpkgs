@@ -919,6 +919,7 @@ stdenv.mkDerivation (finalAttrs: {
       withImportd
       withKmod
       withLocaled
+      withLogind
       withMachined
       withNetworkd
       withPortabled
