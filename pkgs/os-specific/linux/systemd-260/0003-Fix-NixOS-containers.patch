@@ -1,7 +1,7 @@
-From 9dc97df1f511dd7cef1090c5f45676273458058c Mon Sep 17 00:00:00 2001
+From ec2e96a3b5c497caaddba93cbad4d3bffd3822e1 Mon Sep 17 00:00:00 2001
 From: Eelco Dolstra <eelco.dolstra@logicblox.com>
 Date: Wed, 16 Apr 2014 10:59:28 +0200
-Subject: [PATCH 03/20] Fix NixOS containers
+Subject: [PATCH 03/18] Fix NixOS containers
 
 In NixOS containers, the init script is bind-mounted into the
 container, so checking early whether it exists will fail.
@@ -10,10 +10,10 @@ container, so checking early whether it exists will fail.
  1 file changed, 2 insertions(+)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 1252a73187..0c6056bd81 100644
+index f3288d35f6..8e91ee3810 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
-@@ -6199,6 +6199,7 @@ static int run(int argc, char *argv[]) {
+@@ -6403,6 +6403,7 @@ static int run(int argc, char *argv[]) {
                                  goto finish;
                          }
                  } else {
@@ -21,14 +21,14 @@ index 1252a73187..0c6056bd81 100644
                          _cleanup_free_ char *p = NULL;
  
                          if (arg_pivot_root_new)
-@@ -6218,6 +6219,7 @@ static int run(int argc, char *argv[]) {
+@@ -6422,6 +6423,7 @@ static int run(int argc, char *argv[]) {
                                  log_error_errno(r, "Unable to determine if %s looks like it has an OS tree (i.e. whether /usr/ exists): %m", arg_directory);
                                  goto finish;
                          }
 +#endif
                  }
  
-                 if (arg_userns_mode == USER_NAMESPACE_MANAGED) {
+                 if (userns_fd >= 0) {
 -- 
-2.51.2
+2.53.0
 

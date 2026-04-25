@@ -1,7 +1,7 @@
-From 256f4c605bc2e46eed15a2a9ee6f150e74203bcf Mon Sep 17 00:00:00 2001
+From ec033315c28f0c6092a6137f214ae556551ea6ff Mon Sep 17 00:00:00 2001
 From: oxalica <oxalicc@pm.me>
 Date: Tue, 4 Oct 2022 09:18:07 +0800
-Subject: [PATCH 14/20] core: don't taint on unmerged /usr
+Subject: [PATCH 14/18] core: don't taint on unmerged /usr
 
 NixOS has very different approach towards /bin and /sbin - they don't
 really exist (except for /bin/sh and /usr/bin/env, because these are used
@@ -36,5 +36,5 @@ index 8872a224b2..bc736e2ef8 100644
                  stage[n++] = "var-run-bad";
  
 -- 
-2.51.2
+2.53.0
 

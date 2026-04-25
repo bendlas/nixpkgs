@@ -8675,7 +8675,7 @@ with pkgs;
       guiSupport = false;
     };
   };
-  systemd_259 = callPackage ../os-specific/linux/systemd-259 {
+  systemd_260 = callPackage ../os-specific/linux/systemd-260 {
     # break some cyclic dependencies
     util-linux = util-linuxMinimal;
     # provide a super minimal gnupg used for systemd-machined
