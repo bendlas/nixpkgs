@@ -1,7 +1,7 @@
-From 6587af9eefd5793bc5d13d07cf15c94c08e9c2c2 Mon Sep 17 00:00:00 2001
+From 799c87994795a49d6c03bc51d2f183ca950ee3ed Mon Sep 17 00:00:00 2001
 From: Maximilian Bosch <maximilian@mbosch.me>
 Date: Fri, 1 Sep 2023 09:57:02 +0200
-Subject: [PATCH 16/20] systemctl-edit: suggest `systemdctl edit --runtime` on
+Subject: [PATCH 16/18] systemctl-edit: suggest `systemdctl edit --runtime` on
  system scope
 
 This is a NixOS-specific change. When trying to modify a unit with
@@ -44,5 +44,5 @@ index a28180922a..22c9c8fdbd 100644
                  return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Cannot edit units interactively if not on a tty.");
  
 -- 
-2.51.2
+2.53.0
 

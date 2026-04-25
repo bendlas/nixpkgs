@@ -1,7 +1,7 @@
-From b47ae30398ea88d14694739dde5c09f7c3565ca1 Mon Sep 17 00:00:00 2001
+From b0a985adfe8521d39302649cac025a28c7cef34f Mon Sep 17 00:00:00 2001
 From: Raito Bezarius <masterancpp@gmail.com>
 Date: Mon, 19 Jun 2023 02:11:35 +0200
-Subject: [PATCH 02/20] Don't try to unmount /nix or /nix/store
+Subject: [PATCH 02/18] Don't try to unmount /nix or /nix/store
 
 They'll still be remounted read-only.
 
@@ -14,10 +14,10 @@ Original-Author: Eelco Dolstra <eelco.dolstra@logicblox.com>
  2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/src/shared/fstab-util.c b/src/shared/fstab-util.c
-index e8b1d7e42f..444fbe2651 100644
+index 25e229bf3e..b9af1c3b13 100644
 --- a/src/shared/fstab-util.c
 +++ b/src/shared/fstab-util.c
-@@ -72,6 +72,8 @@ bool fstab_is_extrinsic(const char *mount, const char *opts) {
+@@ -76,6 +76,8 @@ bool fstab_is_extrinsic(const char *mount, const char *opts) {
          /* Don't bother with the OS data itself */
          if (PATH_IN_SET(mount,
                          "/",
@@ -27,7 +27,7 @@ index e8b1d7e42f..444fbe2651 100644
                          "/etc"))
                  return true;
 diff --git a/src/shutdown/umount.c b/src/shutdown/umount.c
-index 46f208824a..3a625ad2a6 100644
+index 7729a1d415..744abeee23 100644
 --- a/src/shutdown/umount.c
 +++ b/src/shutdown/umount.c
 @@ -178,8 +178,10 @@ int mount_points_list_get(FILE *f, MountPoint **head) {
@@ -44,5 +44,5 @@ index 46f208824a..3a625ad2a6 100644
  
  static void log_umount_blockers(const char *mnt) {
 -- 
-2.51.2
+2.53.0
 

@@ -1,7 +1,7 @@
-From 5105a4ce337f29cd69442c90509c48e8a17fea7c Mon Sep 17 00:00:00 2001
+From 6fc5a0dfa754baa4b7192c0bdee6855461dec447 Mon Sep 17 00:00:00 2001
 From: Imuli <i@imu.li>
 Date: Wed, 19 Oct 2016 08:46:47 -0400
-Subject: [PATCH 08/20] localectl: use /etc/X11/xkb for list-x11-*
+Subject: [PATCH 08/18] localectl: use /etc/X11/xkb for list-x11-*
 
 NixOS has an option to link the xkb data files to /etc/X11, but not to
 /usr/share/X11.
@@ -23,5 +23,5 @@ index 63703007ad..50def81940 100644
  }
  
 -- 
-2.51.2
+2.53.0
 
