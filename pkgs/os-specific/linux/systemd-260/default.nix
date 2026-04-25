@@ -199,17 +199,17 @@ let
   # command:
   #  $ curl -s https://api.github.com/repos/systemd/systemd/releases/latest | \
   #     jq '.created_at|strptime("%Y-%m-%dT%H:%M:%SZ")|mktime'
-  releaseTimestamp = "1763405133";
+  releaseTimestamp = "1774272144";
 in
 stdenv.mkDerivation (finalAttrs: {
   inherit pname;
-  version = "259-rc2";
+  version = "260.1";
 
   src = fetchFromGitHub {
     owner = "systemd";
     repo = "systemd";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-2iD7SMxGaD6wBkAfQlWZZg6ibkjJl9vxinN8UA5oxAM=";
+    hash = "sha256-FUKj3lvjz8TIsyu8NyJYtiNele+1BhdJPdw7r7nW6as=";
   };
 
   # On major changes, or when otherwise required, you *must* :
@@ -237,17 +237,13 @@ stdenv.mkDerivation (finalAttrs: {
     ./0014-core-don-t-taint-on-unmerged-usr.patch
     ./0015-tpm2_context_init-fix-driver-name-checking.patch
     ./0016-systemctl-edit-suggest-systemdctl-edit-runtime-on-sy.patch
-    ./0017-meson.build-do-not-create-systemdstatedir.patch
-
     # systemd tries to link the systemd-ssh-proxy ssh config snippet with tmpfiles
     # if the install prefix is not /usr, but that does not work for us
     # because we include the config snippet manually
-    ./0018-meson-Don-t-link-ssh-dropins.patch
-
-    ./0019-install-unit_file_exists_full-follow-symlinks.patch
+    ./0017-meson-Don-t-link-ssh-dropins.patch
   ]
   ++ lib.optionals (stdenv.hostPlatform.isLinux && stdenv.hostPlatform.isGnu) [
-    ./0020-timesyncd-disable-NSCD-when-DNSSEC-validation-is-dis.patch
+    ./0018-timesyncd-disable-NSCD-when-DNSSEC-validation-is-dis.patch
   ];
 
   postPatch = ''
@@ -646,6 +642,7 @@ stdenv.mkDerivation (finalAttrs: {
             "src/import/export-tar.c"
             "src/import/import-common.c"
             "src/import/import-tar.c"
+            "src/import/pull-oci.c"
           ];
           ignore = [
             # occurrences here refer to the tar sub command
