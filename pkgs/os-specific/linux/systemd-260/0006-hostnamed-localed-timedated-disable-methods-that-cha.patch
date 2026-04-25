@@ -1,7 +1,7 @@
-From 32b65a9a5095d12db116f595f2f0b092d3813883 Mon Sep 17 00:00:00 2001
+From 8e882c1ec2b37f20358d396a97a53a6e9d90afd8 Mon Sep 17 00:00:00 2001
 From: Gabriel Ebner <gebner@gebner.org>
 Date: Sun, 6 Dec 2015 14:26:36 +0100
-Subject: [PATCH 06/20] hostnamed, localed, timedated: disable methods that
+Subject: [PATCH 06/18] hostnamed, localed, timedated: disable methods that
  change system settings.
 
 ---
@@ -11,10 +11,10 @@ Subject: [PATCH 06/20] hostnamed, localed, timedated: disable methods that
  3 files changed, 25 insertions(+)
 
 diff --git a/src/hostname/hostnamed.c b/src/hostname/hostnamed.c
-index 9ba3d312bd..2d5f82fb8d 100644
+index 04c72e8137..1f9f296d56 100644
 --- a/src/hostname/hostnamed.c
 +++ b/src/hostname/hostnamed.c
-@@ -1388,6 +1388,9 @@ static int method_set_static_hostname(sd_bus_message *m, void *userdata, sd_bus_
+@@ -1421,6 +1421,9 @@ static int method_set_static_hostname(sd_bus_message *m, void *userdata, sd_bus_
          if (r < 0)
                  return r;
  
@@ -24,7 +24,7 @@ index 9ba3d312bd..2d5f82fb8d 100644
          name = empty_to_null(name);
  
          context_read_etc_hostname(c);
-@@ -1454,6 +1457,9 @@ static int set_machine_info(Context *c, sd_bus_message *m, int prop, sd_bus_mess
+@@ -1487,6 +1490,9 @@ static int set_machine_info(Context *c, sd_bus_message *m, int prop, sd_bus_mess
          if (r < 0)
                  return r;
  
@@ -69,10 +69,10 @@ index 041ba29cd8..02fbe3e278 100644
  
          r = x11_context_verify_and_warn(&in, LOG_ERR, error);
 diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
-index 9016f6c4a6..f915dbc75d 100644
+index 43cf3fddb9..1455830cba 100644
 --- a/src/timedate/timedated.c
 +++ b/src/timedate/timedated.c
-@@ -678,6 +678,10 @@ static int method_set_timezone(sd_bus_message *m, void *userdata, sd_bus_error *
+@@ -680,6 +680,10 @@ static int method_set_timezone(sd_bus_message *m, void *userdata, sd_bus_error *
          if (r < 0)
                  return r;
  
@@ -83,7 +83,7 @@ index 9016f6c4a6..f915dbc75d 100644
          if (!timezone_is_valid(z, LOG_DEBUG))
                  return sd_bus_error_setf(error, SD_BUS_ERROR_INVALID_ARGS, "Invalid or not installed time zone '%s'", z);
  
-@@ -756,6 +760,9 @@ static int method_set_local_rtc(sd_bus_message *m, void *userdata, sd_bus_error
+@@ -758,6 +762,9 @@ static int method_set_local_rtc(sd_bus_message *m, void *userdata, sd_bus_error
          if (r < 0)
                  return r;
  
@@ -93,7 +93,7 @@ index 9016f6c4a6..f915dbc75d 100644
          if (lrtc == c->local_rtc && !fix_system)
                  return sd_bus_reply_method_return(m, NULL);
  
-@@ -954,6 +961,9 @@ static int method_set_ntp(sd_bus_message *m, void *userdata, sd_bus_error *error
+@@ -956,6 +963,9 @@ static int method_set_ntp(sd_bus_message *m, void *userdata, sd_bus_error *error
          if (r < 0)
                  return r;
  
@@ -104,5 +104,5 @@ index 9016f6c4a6..f915dbc75d 100644
          if (r < 0)
                  return r;
 -- 
-2.51.2
+2.53.0
 
