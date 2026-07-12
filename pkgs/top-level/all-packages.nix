@@ -9447,6 +9447,8 @@ with pkgs;
   vscodium-fhs = vscodium.fhs;
   vscodium-fhsWithPackages = vscodium.fhsWithPackages;
 
+  vscodiumFromSource = callPackage ../applications/editors/vscode/vscodium-from-source.nix { };
+
   antigravity-ide-fhs = antigravity-ide.fhs;
   antigravity-ide-fhsWithPackages = antigravity-ide.fhsWithPackages;
 
