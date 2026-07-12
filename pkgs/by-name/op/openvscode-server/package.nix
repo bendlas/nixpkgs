@@ -2,16 +2,17 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchpatch,
   buildGoModule,
   makeWrapper,
   cacert,
   moreutils,
   jq,
   git,
+  openssh,
   pkg-config,
   runCommand,
   nodejs_22,
-  nodejs-slim_22,
   node-gyp,
   libsecret,
   libkrb5,
@@ -36,35 +37,37 @@ let
     }
     .${system} or (throw "Unsupported system ${system}");
 
-in
-stdenv.mkDerivation (finalAttrs: {
+in stdenv.mkDerivation (finalAttrs: {
   pname = "openvscode-server";
-  version = "1.109.5";
+  version = "1.128.0";
 
   executableName = "openvscode-server";
   longName = "OpenVSCode Server";
 
   src = fetchFromGitHub {
-    owner = "gitpod-io";
+    owner = "bendlas";
     repo = "openvscode-server";
-    rev = "openvscode-server-v${finalAttrs.version}";
-    hash = "sha256-FWexstn6pmKPkMuoXOWr4+levM+3FK74q1HLu4kFWTc=";
+    # rev = "openvscode-server-v${finalAttrs.version}";
+    # hash = "sha256-FWexstn6pmKPkMuoXOWr4+levM+3FK74q1HLu4kFWTc=";
+    rev = "02817d3a02c6973e224d827fee57f34a77f6743f";
+    hash = "sha256-Xzqw8bXxs7yS1Mn2aUbvBF8KJ01fNaFUuGphsiqN1pw=";
   };
 
   ## fetchNpmDeps doesn't correctly process git dependencies
   ## presumably because of https://github.com/npm/cli/issues/5170
   ## therefore, we're fetching all the node_module folders into
   ## a single FOD, and unpack it in configurePhase
-  nodeModules =
-    runCommand "openvscode-server-node-modules"
+  npmCache =
+    runCommand "openvscode-server-npm-cache"
       {
         inherit (finalAttrs) src nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-DMjqFMdp7ocGdvMEmrKqB8RhF+BTN/9ybOKQAeuSG/o=";
+        outputHash = "sha256-CsP5JRBwtnM4pbEFKb7WZBZR9Wy4dajJ8BQFv4umLTc=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
+          NODE_ENV = "development";
           npm_config_progress = false;
           npm_config_cafile = "${cacert}/etc/ssl/certs/ca-bundle.crt";
         };
@@ -103,12 +106,13 @@ stdenv.mkDerivation (finalAttrs: {
   };
   nativeBuildInputs = [
     nodejs
-    nodejs-slim_22.python
+    nodejs.python
     pkg-config
     makeWrapper
     git
     jq
     moreutils
+    openssh
   ];
 
   buildInputs =
@@ -122,6 +126,13 @@ stdenv.mkDerivation (finalAttrs: {
       cctools
     ];
 
+  patches = [
+    (fetchpatch {
+      url = "https://raw.githubusercontent.com/VSCodium/vscodium/refs/heads/master/patches/51-build-disable-non-ascii.patch";
+      hash = "sha256-UVkimvry2FH8kIV3QOt+duWof68DPkA9Xf7qocWaurQ=";
+    })
+  ];
+
   # remove all built-in extensions, as these are 3rd party extensions that
   # get downloaded from vscode marketplace
   postPatch = ''
@@ -133,6 +144,14 @@ stdenv.mkDerivation (finalAttrs: {
     EOF
     ) | sponge product.json
     echo "Updated product.json"
+    substituteInPlace build/gulpfile.reh.ts \
+      --replace-fail "compileBuildWithManglingTask" "compileBuildWithoutManglingTask"
+    echo "Updated build/gulpfile.reh.ts, to disable mangling"
+    substituteInPlace src/vs/platform/agentHost/node/copilot/copilotSessionWrapper.ts \
+      --replace-fail \
+        "readonly onUnhandledEvent = this._onUnhandledEvent.event;" \
+        "readonly onUnhandledEvent: Event<SessionEvent> = this._onUnhandledEvent.event;"
+    echo "Updated src/vs/platform/agentHost/node/copilot/copilotSessionWrapper.ts to fix tsx error"
   ''
   ## build/lib/node.ts picks up nodejs version from remote/.npmrc
   ## and prefetches it into .build/node/v{version}/{target}/node
@@ -147,7 +166,7 @@ stdenv.mkDerivation (finalAttrs: {
     export HOME=$TMPDIR/home
     mkdir -p $HOME
     mkdir -p $TMPDIR
-    cp -R $nodeModules $TMPDIR/cache
+    cp -R $npmCache $TMPDIR/cache
     chmod -R +w $TMPDIR/cache
   '';
 
@@ -165,7 +184,7 @@ stdenv.mkDerivation (finalAttrs: {
         echo >&2 "File exists $p/node_modules"
         exit 0
       fi
-      npm_config_cache=$TMPDIR/cache/$p npm ci --ignore-scripts
+      npm ci --ignore-scripts --cache $TMPDIR/cache/$p
       patchShebangs node_modules
     )
     done
