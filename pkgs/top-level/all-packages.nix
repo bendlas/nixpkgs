@@ -2425,6 +2425,8 @@ with pkgs;
     prefetch-npm-deps
     ;
 
+  fetch-npm-deps-reentrant = callPackages ../build-support/node/prefetch-npm-deps-reentrant { };
+    
   importNpmLock = callPackages ../build-support/node/import-npm-lock { };
 
   ldapdomaindump = with python3Packages; toPythonApplication ldapdomaindump;
