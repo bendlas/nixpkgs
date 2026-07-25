@@ -21,7 +21,7 @@
   ripgrep,
   cctools,
   nixosTests,
-  prefetch-npm-deps,
+  fetch-npm-deps-reentrant,
 }:
 let
 
@@ -63,7 +63,7 @@ in stdenv.mkDerivation (finalAttrs: {
         inherit (finalAttrs) src nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-CsP5JRBwtnM4pbEFKb7WZBZR9Wy4dajJ8BQFv4umLTc=";
+        outputHash = "sha256-8WJ9iBPjA9hkmPDgkgrG5iMsODK+I2MggLWpqWeMv7c=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
@@ -79,7 +79,7 @@ in stdenv.mkDerivation (finalAttrs: {
         for p in $(find -name package-lock.json)
         do (
           echo "Prefetching $p"
-          ${prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out/$(dirname $p)"
+          ${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out"
         )
         done
       '';
@@ -100,7 +100,7 @@ in stdenv.mkDerivation (finalAttrs: {
     npm_config_progress = false;
 
     # for --fixup-lockfile
-    prefetchNpmDeps = "${prefetch-npm-deps}/bin/prefetch-npm-deps";
+    prefetchNpmDeps = "${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps";
     forceGitDeps = true;
 
   };
@@ -184,7 +184,7 @@ in stdenv.mkDerivation (finalAttrs: {
         echo >&2 "File exists $p/node_modules"
         exit 0
       fi
-      npm ci --ignore-scripts --cache $TMPDIR/cache/$p
+      npm ci --ignore-scripts --cache $TMPDIR/cache
       patchShebangs node_modules
     )
     done
