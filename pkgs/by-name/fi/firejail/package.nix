@@ -7,6 +7,7 @@
   which,
   xdg-dbus-proxy,
   nixosTests,
+  iptables,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -49,6 +50,12 @@ stdenv.mkDerivation (finalAttrs: {
     # See https://github.com/netblue30/firejail/issues/5659
     substituteInPlace src/firejail/sandbox.c \
       --replace " && !arg_doubledash" ""
+
+    # Workaround for netfilter rules
+    # https://github.com/NixOS/nixpkgs/issues/417544
+    # https://github.com/netblue30/firejail/issues/6637
+    substituteInPlace src/firejail/netfilter.c \
+      --replace '"/sbin/iptables' '"${iptables}/bin/iptables'
   '';
 
   preConfigure = ''
