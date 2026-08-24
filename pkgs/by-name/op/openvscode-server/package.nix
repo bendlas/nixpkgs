@@ -12,7 +12,7 @@
   openssh,
   pkg-config,
   runCommand,
-  nodejs_22,
+  nodejs_24,
   node-gyp,
   libsecret,
   libkrb5,
@@ -25,7 +25,7 @@
 }:
 let
 
-  nodejs = nodejs_22;
+  nodejs = nodejs_24;
 
   system = stdenv.hostPlatform.system;
 
@@ -39,7 +39,7 @@ let
 
 in stdenv.mkDerivation (finalAttrs: {
   pname = "openvscode-server";
-  version = "1.128.0";
+  version = "1.134.0";
 
   executableName = "openvscode-server";
   longName = "OpenVSCode Server";
@@ -49,8 +49,8 @@ in stdenv.mkDerivation (finalAttrs: {
     repo = "openvscode-server";
     # rev = "openvscode-server-v${finalAttrs.version}";
     # hash = "sha256-FWexstn6pmKPkMuoXOWr4+levM+3FK74q1HLu4kFWTc=";
-    rev = "02817d3a02c6973e224d827fee57f34a77f6743f";
-    hash = "sha256-Xzqw8bXxs7yS1Mn2aUbvBF8KJ01fNaFUuGphsiqN1pw=";
+    rev = "7e8ee5e8a51a5ef314a7f4c75c49b894430847dd";
+    hash = "sha256-pPb74dG222fviTPMC3MTYRZGpAVC42OV/oKAOOJZWzs=";
   };
 
   ## fetchNpmDeps doesn't correctly process git dependencies
@@ -63,7 +63,7 @@ in stdenv.mkDerivation (finalAttrs: {
         inherit (finalAttrs) src nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-8WJ9iBPjA9hkmPDgkgrG5iMsODK+I2MggLWpqWeMv7c=";
+        outputHash = "sha256-aEwS7straQx1nJeYJ5Yt6cFGcahLfHQBhTfV4cPl1ho=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
