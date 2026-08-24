@@ -63,7 +63,7 @@ in stdenv.mkDerivation (finalAttrs: {
         inherit (finalAttrs) src nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-aEwS7straQx1nJeYJ5Yt6cFGcahLfHQBhTfV4cPl1ho=";
+        outputHash = "sha256-OU9rNSuhqEeg6kOmEP8NkzrBBoWYDmI3wJzBYave/gM=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
@@ -82,6 +82,7 @@ in stdenv.mkDerivation (finalAttrs: {
           ${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out"
         )
         done
+        rm "$out/package-lock.json"
       '';
 
   env = {
