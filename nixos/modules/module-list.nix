@@ -143,6 +143,7 @@
   ./i18n/input-method/uim.nix
   ./image/images.nix
   ./installer/tools/tools.nix
+  ./installer/mounted-install/mounted-install.nix
   ./misc/assertions.nix
   ./misc/crashdump.nix
   ./misc/documentation.nix
