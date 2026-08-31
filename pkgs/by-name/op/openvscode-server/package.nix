@@ -3,11 +3,13 @@
   stdenv,
   fetchFromGitHub,
   fetchpatch,
+  fetchurl,
   buildGoModule,
   makeWrapper,
   cacert,
   moreutils,
   jq,
+  electron,
   git,
   openssh,
   pkg-config,
@@ -37,9 +39,15 @@ let
     }
     .${system} or (throw "Unsupported system ${system}");
 
+  electronVersion = "42.10.0";
+  electronTypes = fetchurl {
+    url = "https://github.com/electron/electron/releases/download/v${electronVersion}/electron.d.ts";
+    hash = "sha256-JL04DMSuyCTox+ixi9/LikB41SL8YHZFs4d02sCU2kE==";
+  };
+
 in stdenv.mkDerivation (finalAttrs: {
   pname = "openvscode-server";
-  version = "1.134.0";
+  version = "1.138.0";
 
   executableName = "openvscode-server";
   longName = "OpenVSCode Server";
@@ -49,8 +57,8 @@ in stdenv.mkDerivation (finalAttrs: {
     repo = "openvscode-server";
     # rev = "openvscode-server-v${finalAttrs.version}";
     # hash = "sha256-FWexstn6pmKPkMuoXOWr4+levM+3FK74q1HLu4kFWTc=";
-    rev = "7e8ee5e8a51a5ef314a7f4c75c49b894430847dd";
-    hash = "sha256-pPb74dG222fviTPMC3MTYRZGpAVC42OV/oKAOOJZWzs=";
+    rev = "aad274df04edd3e25958bce74aba3c29a86550b2";
+    hash = "sha256-ov77S+aXtdlkN5zZsJg6MIuAt4lqBccAK/20+x+o6rM=";
   };
 
   ## fetchNpmDeps doesn't correctly process git dependencies
@@ -63,7 +71,7 @@ in stdenv.mkDerivation (finalAttrs: {
         inherit (finalAttrs) src nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-OU9rNSuhqEeg6kOmEP8NkzrBBoWYDmI3wJzBYave/gM=";
+        outputHash = "sha256-ml8Ucy1Z19eBj/uK8aK8HomUoJvyEOsUofNNsgpZI7w=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
@@ -161,6 +169,10 @@ in stdenv.mkDerivation (finalAttrs: {
     sed -i 's/target=.*/target="${nodejs.version}"/' remote/.npmrc
     mkdir -p .build/node/v${nodejs.version}/${vsBuildTarget}
     ln -s ${nodejs}/bin/node .build/node/v${nodejs.version}/${vsBuildTarget}/node
+    # pre-seed Electron type declarations so the offline build's
+    # ensureElectronTypes() postinstall skips its github download
+    mkdir -p .build/typings
+    ln -s ${electronTypes} .build/typings/electron.d.ts
   '';
 
   preConfigure = ''
