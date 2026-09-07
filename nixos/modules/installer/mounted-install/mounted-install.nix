@@ -174,7 +174,7 @@ in
         src = ./set-mounted-root-password.sh;
         isExecutable = true;
         replacements = {
-          python3 = bpkgs.python3;
+          mkpasswd = bpkgs.mkpasswd;
           runtimeShell = bpkgs.runtimeShell;
         };
       };
