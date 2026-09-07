@@ -169,11 +169,15 @@ in
       # Cross-architecture-safe tool that writes a password hash into the
       # mounted root's /etc/shadow.  Only hashing (on the build host) and plain
       # file edits are performed, so no target-arch binary is ever executed.
-      setMountedRootPassword = pkgs.writeScript "set-mounted-root-password"
-        (lib.replaceVarsWith {
+      setMountedRootPassword = bpkgs.replaceVarsWith {
+        name = "set-mounted-root-password";
+        src = ./set-mounted-root-password.sh;
+        isExecutable = true;
+        replacements = {
           python3 = bpkgs.python3;
           runtimeShell = bpkgs.runtimeShell;
-        } (builtins.readFile ./set-mounted-root-password.sh));
+        };
+      };
     };
 
     systemd.services.register-nix-paths = lib.mkIf config.mountedInstall.registerOnFirstBoot {
