@@ -16,7 +16,7 @@
 # Usage:
 #   install-to-mounted-root --root <mount-point> \
 #       [--system <toplevel>] [--no-bootloader]
-#       [--bootloader extlinux|systemd-boot|none]
+#       [--bootloader extlinux|systemd-boot|grub|none]
 #       [--esp <esp-mount-point>] [--boot-dir <boot-dir>]
 #       [--file-registration|--immediate]
 
@@ -32,6 +32,7 @@ bootloader="@defaultBootloader@"
 esp=""
 bootDir=""
 fileRegistration="@fileRegistration@"
+grubDevice="@grubDevice@"
 
 # Paths (baked) used by the file-registration mode.
 storePathsFile="@storePathsFile@"
@@ -46,7 +47,9 @@ Options:
   --system <toplevel>    NixOS toplevel store path to install
                           (default: the system this installer was built for).
   --no-bootloader        Skip boot loader installation.
-  --bootloader <name>    Override the boot loader: extlinux | systemd-boot | none.
+  --bootloader <name>    Override the boot loader: extlinux | systemd-boot | grub | none.
+  --grub-device <dev>    Override the GRUB install device (BIOS/MBR only),
+                          defaulting to the one baked from the configuration.
   --esp <dir>            Mount point of the target ESP (default: <root>/@defaultEsp@).
                           Required for systemd-boot.
   --boot-dir <dir>       Boot directory for extlinux (default: <root>/@defaultBootDir@).
@@ -72,6 +75,9 @@ while [ "$#" -gt 0 ]; do
         --bootloader)
             [ -n "$1" ] || { echo "$0: --bootloader requires an argument" >&2; exit 1; }
             bootloader="$1"; shift 1 ;;
+        --grub-device)
+            [ -n "$1" ] || { echo "$0: --grub-device requires an argument" >&2; exit 1; }
+            grubDevice="$1"; shift 1 ;;
         --esp)
             [ -n "$1" ] || { echo "$0: --esp requires an argument" >&2; exit 1; }
             esp="$1"; shift 1 ;;
@@ -102,7 +108,7 @@ if [ -z "$esp" ]; then esp="$root/@defaultEsp@"; fi
 if [ -z "$bootDir" ]; then bootDir="$root/@defaultBootDir@"; fi
 
 case "$bootloader" in
-    extlinux|systemd-boot|none) ;;
+    extlinux|systemd-boot|grub|none) ;;
     *) echo "$0: unknown bootloader '$bootloader'" >&2; exit 1 ;;
 esac
 
@@ -160,6 +166,14 @@ elif [ "$bootloader" = "systemd-boot" ]; then
         --timeout "@systemdBootTimeout@" \
         --editor "@systemdBootEditor@" \
         --console-mode "@systemdBootConsoleMode@"
+elif [ "$bootloader" = "grub" ]; then
+    echo "installing GRUB ($@grubPlatform@) to $root ..."
+    @grubInstaller@ \
+        --root "$root" \
+        --system "$system" \
+        --grub-target "@grubPlatform@" \
+        $([ "@grubRemovable@" = 1 ] && echo --removable || echo --no-removable) \
+        $([ -n "$grubDevice" ] && echo --device "$grubDevice")
 elif [ "$bootloader" = "none" ]; then
     echo "skipping boot loader installation"
 fi
