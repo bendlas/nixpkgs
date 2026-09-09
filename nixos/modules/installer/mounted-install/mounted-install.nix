@@ -11,15 +11,24 @@
 #
 # For the boot loader it supports:
 #   * `boot.loader.generic-extlinux-compatible` (e.g. U-Boot), installed with
-#     that module's build-architecture `populateCmd`; and
+#     that module's build-architecture `populateCmd`;
 #   * `boot.loader.systemd-boot`, installed to a mounted EFI System Partition
 #     by copying the target-arch `systemd-boot<arch>.efi` to the UEFI fallback
 #     path (`EFI/BOOT/BOOT<ARCH>.EFI`) and writing a single Boot Loader
 #     Specification entry from the toplevel bootspec.  No EFI variables are
 #     touched, which is what you want for removable media (USB sticks, SD
-#     cards) and is mandatory for cross-architecture installs.
+#     cards) and is mandatory for cross-architecture installs; and
+#   * `boot.loader.grub`, installed with the build host's GRUB utilities only
+#     (`grub-mkimage` for EFI removable media, `grub-install` for BIOS/MBR).
+#     Cross-architecture GRUB install requires the GRUB utilities to run on the
+#     build host; for an aarch64 target built from x86_64 that means a
+#     host-runnable GRUB that emits aarch64 firmware, which nixpkgs does not
+#     expose by default -- so GRUB works out of the box for same-architecture
+#     installs, and needs a host-runnable GRUB for the target firmware in the
+#     cross case.
 #
-# Two build attributes are produced:
+# Two build attributes are produced, both pointing at the *same* combined
+# package (so the password tool ships alongside the installer):
 #   * `system.build.installToMountedRoot` -- register the store *immediately*
 #     with host `nix --store` (like `nixos-install`).  Default and recommended.
 #   * `system.build.installToMountedRootFileReg` -- copy the closure with `cp`
@@ -27,6 +36,10 @@
 #     by the `register-nix-paths` service (enabled with
 #     {option}`mountedInstall.registerOnFirstBoot`).  Useful when `nix
 #     --store` against the target is unavailable.
+#
+# The combined package also contains `bin/set-mounted-root-password`, a
+# cross-architecture-safe tool that writes a password hash into the mounted
+# root's `/etc/shadow` (only hashing runs on the build host).
 {
   config,
   lib,
@@ -49,8 +62,65 @@ let
       "extlinux"
     else if config.boot.loader.systemd-boot.enable then
       "systemd-boot"
+    else if config.boot.loader.grub.enable then
+      "grub"
     else
       "none";
+
+  # GRUB (cross-architecture safe: only the build host's grub utilities run).
+  # grub.nix does not expose its GRUB package derivations under
+  # config.boot.loader.grub (it only feeds them to install-grub.pl), and it
+  # defaults the exposed system.build.grub to a non-EFI build, so we build a
+  # host-runnable GRUB directly here.  For EFI we need the EFI-enabled build so
+  # grub-mkimage has the target's EFI core modules.
+  cfg = config.boot.loader.grub;
+  grubEnabled = cfg.enable;
+  grubEfiSupport = cfg.efiSupport;
+  grubPkg =
+    if grubEfiSupport then bpkgs.grub2.override { efiSupport = true; }
+    else bpkgs.grub2;
+  # When GRUB is disabled this derivation is never executed (the chosen boot
+  # loader will not be GRUB), so the fallback is just a build-host GRUB.
+  grubTool = if grubEnabled then grubPkg else bpkgs.grub2;
+  grubPlatform =
+    if grubEnabled then grubPkg.grubTarget
+    else "${pkgs.stdenv.hostPlatform.efiArch}-efi";
+  grubEsp = lib.removePrefix "/" config.boot.loader.efi.efiSysMountPoint;
+  grubBootDir =
+    let
+      boots = cfg.mirroredBoots;
+    in
+    if boots != [ ] then
+      lib.removePrefix "/" (builtins.head boots).path
+    else
+      "boot";
+  grubRemovable = if cfg.efiInstallAsRemovable then "1" else "0";
+  grubDevice =
+    let
+      boots = cfg.mirroredBoots;
+    in
+    if boots != [ ] && (builtins.head boots).devices != [ ] then
+      builtins.head (builtins.head boots).devices
+    else
+      "";
+  grubDistroName = config.system.nixos.distroName;
+  grubDistroId = lib.toLower grubDistroName;
+  grubInstaller = bpkgs.replaceVarsWith {
+    name = "grub-install-to-mounted";
+    src = ./grub-install-to-mounted.sh;
+    dir = "bin";
+    isExecutable = true;
+    replacements = {
+      runtimeShell = bpkgs.runtimeShell;
+      grubTool = grubTool;
+      grubPlatform = grubPlatform;
+      grubEsp = grubEsp;
+      grubBootDir = grubBootDir;
+      distroName = grubDistroName;
+      distroId = grubDistroId;
+      blkid = bpkgs.util-linux;
+    };
+  };
 
   # Paths relative to the target root.
   defaultEsp = lib.removePrefix "/" config.boot.loader.efi.efiSysMountPoint;
@@ -129,8 +199,32 @@ let
         systemdBootTimeout = systemdBootTimeout;
         systemdBootEditor = systemdBootEditor;
         systemdBootConsoleMode = systemdBootConsoleMode;
+        grubInstaller = "${grubInstaller}/bin/grub-install-to-mounted";
+        grubPlatform = grubPlatform;
+        grubRemovable = grubRemovable;
+        grubDevice = grubDevice;
       };
     };
+
+  installerImmediate = mkInstaller "immediate";
+  installerFileReg = mkInstaller "file";
+  passwordTool = bpkgs.replaceVarsWith {
+    name = "set-mounted-root-password";
+    src = ./set-mounted-root-password.sh;
+    dir = "bin";
+    isExecutable = true;
+    replacements = {
+      mkpasswd = bpkgs.mkpasswd;
+      runtimeShell = bpkgs.runtimeShell;
+    };
+  };
+  # Combined package: both installer modes plus the password tool share one
+  # output, so they can be shipped and run together on the (possibly foreign)
+  # architecture host.
+  mountedInstall = bpkgs.symlinkJoin {
+    name = "mounted-install";
+    paths = [ installerImmediate installerFileReg passwordTool ];
+  };
 
   nixPathRegistrationFile = config.mountedInstall.nixPathRegistrationFile;
 in
@@ -163,21 +257,10 @@ in
 
   config = {
     system.build = {
-      installToMountedRoot = mkInstaller "immediate";
-      installToMountedRootFileReg = mkInstaller "file";
-
-      # Cross-architecture-safe tool that writes a password hash into the
-      # mounted root's /etc/shadow.  Only hashing (on the build host) and plain
-      # file edits are performed, so no target-arch binary is ever executed.
-      setMountedRootPassword = bpkgs.replaceVarsWith {
-        name = "set-mounted-root-password";
-        src = ./set-mounted-root-password.sh;
-        isExecutable = true;
-        replacements = {
-          mkpasswd = bpkgs.mkpasswd;
-          runtimeShell = bpkgs.runtimeShell;
-        };
-      };
+      # Both installer modes point at the same combined package, which also
+      # contains the password-setting tool (bin/set-mounted-root-password).
+      installToMountedRoot = mountedInstall;
+      installToMountedRootFileReg = mountedInstall;
     };
 
     systemd.services.register-nix-paths = lib.mkIf config.mountedInstall.registerOnFirstBoot {
