@@ -47,7 +47,7 @@ let
 
 in stdenv.mkDerivation (finalAttrs: {
   pname = "openvscode-server";
-  version = "1.136.1";
+  version = "1.137.0";
 
   executableName = "openvscode-server";
   longName = "OpenVSCode Server";
@@ -57,8 +57,8 @@ in stdenv.mkDerivation (finalAttrs: {
     repo = "openvscode-server";
     # rev = "openvscode-server-v${finalAttrs.version}";
     # hash = "sha256-FWexstn6pmKPkMuoXOWr4+levM+3FK74q1HLu4kFWTc=";
-    rev = "dd5e06998460eb7f79141ffab821689b96d8c9b3";
-    hash = "sha256-Z0x0GPk1LtSXJHTpoWUTMszmvsYbx3YJPOrC4H56PaY=";
+    rev = "acad08a5676d4704db234a266a2b1dd78e9aaaf2";
+    hash = "sha256-mwjVRxDpKAjSE5JFwN0YwFaQEwZxTiq3APw2uK1Xq54=";
   };
 
   ## fetchNpmDeps doesn't correctly process git dependencies
@@ -71,7 +71,7 @@ in stdenv.mkDerivation (finalAttrs: {
         inherit (finalAttrs) src nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-4f7JCwudHiMawryheCSV6VRKMEmnJB9X1DbV9G9wWA0=";
+        outputHash = "sha256-/i4DILY3p1GkbksaKymI8+Z0vGYBjpmVDUpQlOgeBTg=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
