@@ -1,22 +1,23 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, cmake
-, libzip
-, zlib
-, bzip2
-, xz
-, zstd
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  cmake,
+  libzip,
+  zlib,
+  bzip2,
+  xz,
+  zstd,
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "libzippp";
   version = "7.1-1.10.1";
 
   src = fetchFromGitHub {
     owner = "ctabin";
     repo = "libzippp";
-    rev = "libzippp-v${version}";
+    rev = "libzippp-v${finalAttrs.version}";
     hash = "sha256-ffX4UuDKMgSYwIecmJnj+XLnjsMwUbK6rraOk0z4Ma8=";
   };
 
@@ -26,12 +27,18 @@ stdenv.mkDerivation rec {
   ];
 
   nativeBuildInputs = [ cmake ];
-  buildInputs = [ libzip zlib bzip2 xz zstd ];
+  buildInputs = [
+    libzip
+    zlib
+    bzip2
+    xz
+    zstd
+  ];
 
-  meta = with lib; {
+  meta = {
     description = "A C++ wrapper for libzip";
     homepage = "https://github.com";
-    license = licenses.mit;
-    platforms = platforms.all;
+    license = lib.licenses.bsd3;
+    platforms = lib.platforms.all;
   };
-}
+})
