@@ -37,7 +37,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   meta = {
     description = "A C++ wrapper for libzip";
-    homepage = "https://github.com";
+    homepage = "https://github.com/ctabin/libzippp";
     license = lib.licenses.bsd3;
     platforms = lib.platforms.all;
   };
