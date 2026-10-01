@@ -2,7 +2,6 @@
   lib,
   python3,
   fetchFromGitHub,
-  substitute,
   zlib,
   nixosTests,
   postgresqlTestHook,
@@ -54,6 +53,9 @@ pythonPackages.buildPythonApplication rec {
 
   # from Dockerfile
   env.CPPFLAGS = "-DPNG_ARM_NEON_OPT=0";
+  # yarn 4.14+ defaults to enableScripts=false, but the frontend build needs
+  # dependency install scripts (e.g. optipng-bin)
+  env.YARN_ENABLE_SCRIPTS = "1";
 
   format = "setuptools";
 
