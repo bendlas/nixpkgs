@@ -65,6 +65,14 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
+  # fix on GCC 16
+  env.NIX_CFLAGS_COMPILE = toString
+    (map (e: "-Wno-error=${e}") [
+      "unused-but-set-variable"
+      "uninitialized"
+      "maybe-uninitialized"
+    ]);
+
   outputs = [
     "out"
     "bin"
