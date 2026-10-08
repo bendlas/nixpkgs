@@ -60,6 +60,34 @@ let
       (listOf base)
       base
     ]);
+
+  # pgAdmin's initial migration always creates the bootstrap user with
+  # auth_source = 'internal'. If the operator configures a different source
+  # (e.g. webserver, which cannot authenticate an 'internal' row), rewrite the
+  # user after setup-db has created the schema. Only evaluated when a
+  # non-internal source is requested.
+  setInitialAuthSource =
+    let
+      sql =
+        "UPDATE \"user\" SET auth_source = '${cfg.initialAuthSource}' "
+        + "WHERE username = '${lib.replaceStrings [ "'" ] [ "''" ] cfg.initialEmail}';";
+      databaseUri = cfg.settings.CONFIG_DATABASE_URI or "";
+      sqlitePath =
+        if databaseUri == "" then
+          cfg.settings.SQLITE_PATH or "/var/lib/pgadmin/pgadmin4.db"
+        else if lib.hasPrefix "sqlite:////" databaseUri then
+          "/" + lib.removePrefix "sqlite:////" databaseUri
+        else if lib.hasPrefix "sqlite:///" databaseUri then
+          lib.removePrefix "sqlite:///" databaseUri
+        else
+          null;
+    in
+    if sqlitePath != null then
+      "${pkgs.sqlite}/bin/sqlite3 ${lib.escapeShellArg sqlitePath} ${lib.escapeShellArg sql}"
+    else if lib.hasPrefix "postgres" databaseUri then
+      "${config.services.postgresql.package}/bin/psql ${lib.escapeShellArg databaseUri} -v ON_ERROR_STOP=1 -c ${lib.escapeShellArg sql}"
+    else
+      throw "services.pgadmin.initialAuthSource does not support CONFIG_DATABASE_URI='${databaseUri}'";
 in
 {
   options.services.pgadmin = {
@@ -85,6 +113,28 @@ in
         NOTE: Should be string not a store path, to prevent the password from being world readable
       '';
       type = lib.types.path;
+    };
+
+    initialAuthSource = lib.mkOption {
+      description = ''
+        Authentication source assigned to the initial user created by
+        `setup-db`. pgAdmin always creates this user with the `internal`
+        source, which cannot log in when only another source is enabled
+        (for example a webserver-only deployment using
+        `WEBSERVER_REMOTE_USER_FROM_HEADER`).
+
+        Setting this to e.g. `webserver` rewrites the bootstrap user's
+        source right after database setup, so it can be used with the
+        configured authentication source.
+      '';
+      type = lib.types.enum [
+        "internal"
+        "webserver"
+        "kerberos"
+        "ldap"
+        "oauth2"
+      ];
+      default = "internal";
     };
 
     minimumPasswordLength = lib.mkOption {
@@ -198,6 +248,12 @@ in
           # Retype password:
           echo "$PW"
         ) | ${cfg.package}/bin/pgadmin4-cli setup-db
+        ${lib.optionalString (cfg.initialAuthSource != "internal") ''
+          # pgAdmin always creates the bootstrap user with auth_source
+          # 'internal'; rewrite it to the configured source so the
+          # webserver/kerberos/... source can authenticate it.
+          ${setInitialAuthSource}
+        ''}
       '';
 
       restartTriggers = [
