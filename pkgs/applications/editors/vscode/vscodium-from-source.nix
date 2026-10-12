@@ -2,29 +2,21 @@
   lib,
   stdenv,
   fetchFromGitHub,
-  fetchpatch,
   fetchurl,
-  buildGoModule,
-  makeWrapper,
   cacert,
-  moreutils,
   jq,
   git,
-  openssh,
-  curl,
   pkg-config,
   runCommand,
   zip,
   electron,
   nodejs_24,
-  node-gyp,
   libsecret,
   libkrb5,
   libx11,
   libxkbfile,
   ripgrep,
   cctools,
-  nixosTests,
   fetch-npm-deps-reentrant,
   parallel,
 }:
@@ -233,9 +225,6 @@ stdenv.mkDerivation (finalAttrs:
   electronHeaders = electron.headers;
 
   env = {
-    # NODE_OPTIONS = "--openssl-legacy-provider";
-    # NODE_ENV = "development";
-
     # skip unnecessary binary downloads
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
@@ -267,12 +256,8 @@ stdenv.mkDerivation (finalAttrs:
     nodejs
     nodejs.python
     pkg-config
-    makeWrapper
     git
     jq
-    moreutils
-    openssh
-    curl
   ];
 
   buildInputs =
@@ -568,8 +553,11 @@ stdenv.mkDerivation (finalAttrs:
     mkdir -p "$out/bin"
     cat > "$out/bin/codium" <<'VSCODIUM_EOF'
     #!/bin/sh
+    # ELECTRON_RUN_AS_NODE runs Electron as plain node, so the CLI (out/cli.js)
+    # can parse the arguments and then re-exec Electron for the GUI (cli.ts
+    # passes an explicit --app=, since the runtime is not next to the app).
     export ELECTRON_RUN_AS_NODE=1
-    exec ${electron}/bin/electron "$out/share/vscodium/resources/app/out/cli.js" "$@"
+    exec ${electron}/bin/electron "${placeholder "out"}/share/vscodium/resources/app/out/cli.js" "$@"
     VSCODIUM_EOF
     chmod +x "$out/bin/codium"
     patchShebangs "$out/bin"
