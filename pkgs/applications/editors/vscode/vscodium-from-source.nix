@@ -217,13 +217,6 @@ stdenv.mkDerivation (finalAttrs:
         rm -f "$out/package-lock.json"
       '';
 
-  ## Electron headers, exposed via passthru for downstream native module builds
-  ## (the same convention nixpkgs' electron packages follow). Layout is
-  ## `include/node`, i.e. headers for Electron's bundled Node. The build itself
-  ## does not use them: native modules are compiled against the nodejs headers
-  ## through node-gyp's --nodedir (see env below).
-  electronHeaders = electron.headers;
-
   env = {
     # skip unnecessary binary downloads
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
@@ -352,7 +345,7 @@ stdenv.mkDerivation (finalAttrs:
     substituteInPlace prepare_vscode.sh \
       --replace-fail 'CXX=clang++ npm ci && break' 'CXX=clang++ npm ci --ignore-scripts && break' \
       --replace-fail 'npm ci && break' 'npm ci --ignore-scripts && break' \
-      --replace-fail 'mv .npmrc.bak .npmrc' 'mv .npmrc.bak .npmrc && npm rebuild --build-from-source @vscode/spdlog @vscode/deviceid @vscode/fs-copyfile @vscode/sqlite3 @vscode/native-watchdog @vscodium/native-keymap @vscodium/policy-watcher kerberos'
+      --replace-fail 'mv .npmrc.bak .npmrc' 'mv .npmrc.bak .npmrc && npm rebuild --build-from-source @vscode/spdlog @vscode/fs-copyfile @vscode/sqlite3 @vscode/native-watchdog @vscodium/native-keymap @vscodium/policy-watcher kerberos'
 
     # Serve the repackaged nixpkgs Electron zip to @vscode/gulp-electron through
     # its `repo` option, which is gulp-electron's custom-downloader hook -- the
@@ -470,12 +463,6 @@ stdenv.mkDerivation (finalAttrs:
       -execdir mkdir -p {}/bin \; \
       -execdir ln -s ${ripgrep}/bin/rg {}/bin/rg \;
   ''
-  ## pre-seed node-gyp
-  + ''
-    mkdir -p $HOME/.node-gyp/${nodejs.version}
-    echo 11 > $HOME/.node-gyp/${nodejs.version}/installVersion
-    ln -sfv ${nodejs}/include $HOME/.node-gyp/${nodejs.version}
-  ''
   ## node-pty build fix
   + ''
     find -path vscode/node_modules/node-pty/scripts/gen-compile-commands.js \
@@ -570,11 +557,9 @@ stdenv.mkDerivation (finalAttrs:
     runHook postInstall
   '';
 
-  passthru.npmCache = finalAttrs.npmCache;
-  passthru.electronHeaders = finalAttrs.electronHeaders;
-  passthru.electronZip = electronZip;
-  passthru.electron = electron;
-  passthru.builtInExtensionVsix = builtInExtensionVsix;
+  passthru = {
+    inherit electron;
+  };
 
   meta = {
     description = "Open source build of VS Code, built from source (desktop and web editions)";
