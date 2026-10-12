@@ -37,43 +37,6 @@ let
     d:
     "<directory location=\"${d.path}\" mode=\"inotify\" recursive=\"${lib.boolToYesNo d.recursive}\" hidden-files=\"${lib.boolToYesNo d.hidden-files}\" />\n";
 
-  transcodingConfig =
-    if cfg.transcoding then
-      with pkgs;
-      ''
-        <transcoding enabled="yes">
-          <mimetype-profile-mappings>
-            <transcode mimetype="video/x-flv" using="vlcmpeg" />
-            <transcode mimetype="application/ogg" using="vlcmpeg" />
-            <transcode mimetype="audio/ogg" using="ogg2mp3" />
-          </mimetype-profile-mappings>
-          <profiles>
-            <profile name="ogg2mp3" enabled="no" type="external">
-              <mimetype>audio/mpeg</mimetype>
-              <accept-url>no</accept-url>
-              <first-resource>yes</first-resource>
-              <accept-ogg-theora>no</accept-ogg-theora>
-              <agent command="${ffmpeg}/bin/ffmpeg" arguments="-y -i %in -f mp3 %out" />
-              <buffer size="1048576" chunk-size="131072" fill-size="262144" />
-            </profile>
-            <profile name="vlcmpeg" enabled="no" type="external">
-              <mimetype>video/mpeg</mimetype>
-              <accept-url>yes</accept-url>
-              <first-resource>yes</first-resource>
-              <accept-ogg-theora>yes</accept-ogg-theora>
-              <agent command="${lib.getExe vlc}"
-                arguments="-I dummy %in --sout #transcode{venc=ffmpeg,vcodec=mp2v,vb=4096,fps=25,aenc=ffmpeg,acodec=mpga,ab=192,samplerate=44100,channels=2}:standard{access=file,mux=ps,dst=%out} vlc:quit" />
-              <buffer size="14400000" chunk-size="512000" fill-size="120000" />
-            </profile>
-          </profiles>
-        </transcoding>
-      ''
-    else
-      ''
-        <transcoding enabled="no">
-        </transcoding>
-      '';
-
   configText = lib.optionalString (!cfg.customCfg) ''
     <?xml version="1.0" encoding="UTF-8"?>
     <config version="2" xmlns="http://mediatomb.cc/config/2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://mediatomb.cc/config/2 http://mediatomb.cc/config/2.xsd">
@@ -188,7 +151,7 @@ let
             </YouTube>
           </online-content>
         </import>
-        ${transcodingConfig}
+        ${cfg.transcodingConfig}
       </config>
   '';
   defaultFirewallRules = {
@@ -261,6 +224,55 @@ in
         description = ''
           Whether to enable transcoding.
         '';
+      };
+
+      transcodingConfig = lib.mkOption {
+        type = lib.types.str;
+        description = ''
+          xml fragment to define transcoding
+        '';
+        defaultText = ''
+          if cfg.transcoding then
+            defaultTranscodingConfig
+          else
+            "<transcoding enabled=\"no\"/>"
+        '';
+        default =
+          if cfg.transcoding then
+            with pkgs;
+            ''
+              <transcoding enabled="yes">
+                <mimetype-profile-mappings>
+                  <transcode mimetype="video/x-flv" using="vlcmpeg" />
+                  <transcode mimetype="application/ogg" using="vlcmpeg" />
+                  <transcode mimetype="audio/ogg" using="ogg2mp3" />
+                </mimetype-profile-mappings>
+                <profiles>
+                  <profile name="ogg2mp3" enabled="no" type="external">
+                    <mimetype>audio/mpeg</mimetype>
+                    <accept-url>no</accept-url>
+                    <first-resource>yes</first-resource>
+                    <accept-ogg-theora>no</accept-ogg-theora>
+                    <agent command="${ffmpeg}/bin/ffmpeg" arguments="-y -i %in -f mp3 %out" />
+                    <buffer size="1048576" chunk-size="131072" fill-size="262144" />
+                  </profile>
+                  <profile name="vlcmpeg" enabled="no" type="external">
+                    <mimetype>video/mpeg</mimetype>
+                    <accept-url>yes</accept-url>
+                    <first-resource>yes</first-resource>
+                    <accept-ogg-theora>yes</accept-ogg-theora>
+                    <agent command="${lib.getExe vlc}"
+                      arguments="-I dummy %in --sout #transcode{venc=ffmpeg,vcodec=mp2v,vb=4096,fps=25,aenc=ffmpeg,acodec=mpga,ab=192,samplerate=44100,channels=2}:standard{access=file,mux=ps,dst=%out} vlc:quit" />
+                    <buffer size="14400000" chunk-size="512000" fill-size="120000" />
+                  </profile>
+                </profiles>
+              </transcoding>
+            ''
+          else
+            ''
+              <transcoding enabled="no">
+              </transcoding>
+            '';
       };
 
       dataDir = lib.mkOption {
