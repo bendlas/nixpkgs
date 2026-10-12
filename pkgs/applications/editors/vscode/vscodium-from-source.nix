@@ -80,8 +80,8 @@ stdenv.mkDerivation (finalAttrs:
     # already patchelf'd for NixOS (interpreter, rpath, libvulkan), instead of
     # downloading the upstream prebuilt. ELECTRON_SKIP_BINARY_DOWNLOAD only
     # covers the npm `electron` package and does not stop this path; the zip is
-    # served to @electron/get through ELECTRON_MIRROR (see preConfigure). The
-    # version in the file name still comes from vscode's .npmrc so that
+    # served to @vscode/gulp-electron through its `repo` hook (see preConfigure).
+    # The version in the file name still comes from vscode's .npmrc so that
     # gulp-electron looks for the expected name.
     electronVersion = builtins.head (
       builtins.match ".*target=\"([0-9.]+)\".*" (
@@ -369,55 +369,44 @@ stdenv.mkDerivation (finalAttrs:
       --replace-fail 'npm ci && break' 'npm ci --ignore-scripts && break' \
       --replace-fail 'mv .npmrc.bak .npmrc' 'mv .npmrc.bak .npmrc && npm rebuild --build-from-source @vscode/spdlog @vscode/deviceid @vscode/fs-copyfile @vscode/sqlite3 @vscode/native-watchdog @vscodium/native-keymap @vscodium/policy-watcher kerberos'
 
-    # Serve the repackaged nixpkgs Electron zip to @electron/get through
-    # ELECTRON_MIRROR. @vscode/gulp-electron asks @electron/get for
-    # electron-v<version>-<platform>-<arch>.zip and the matching SHASUMS256.txt;
-    # the latter is validated, so provide both. The default mirror layout is
-    # <mirror>/v<version>/<file>. @electron/get@5 downloads with Node's global
-    # fetch, which rejects file:// URLs, so install a small --require shim that
-    # teaches fetch to read them from disk. (ELECTRON_SKIP_BINARY_DOWNLOAD only
-    # covers the npm `electron` package, not this gulp/@electron/get path.)
-    electronMirror=$TMPDIR/electron-mirror
+    # Serve the repackaged nixpkgs Electron zip to @vscode/gulp-electron through
+    # its `repo` option, which is gulp-electron's custom-downloader hook -- the
+    # same one Microsoft's product builds use for their Azure artifact feed (see
+    # the resolver appended to vscode/build/lib/electron.ts below). @electron/get
+    # asks the hook for both the artifact and the SHASUMS256.txt it validates it
+    # against, so export the zip and its checksum line and let the resolver
+    # answer from the store; nothing is downloaded. (ELECTRON_SKIP_BINARY_DOWNLOAD
+    # only covers the npm `electron` package, not this gulp/@electron/get path.)
     electronSha256=$(sha256sum ${electronZip} | cut -d' ' -f1)
-    mkdir -p "$electronMirror/v${electronVersion}"
-    ln -s ${electronZip} "$electronMirror/v${electronVersion}/${electronFile}"
-    printf '%s *%s\n' "$electronSha256" "${electronFile}" > "$electronMirror/v${electronVersion}/SHASUMS256.txt"
+    export VSCODIUM_ELECTRON_ZIP=${electronZip}
+    export VSCODIUM_ELECTRON_SHASUMS="$electronSha256 *${electronFile}"
     # gulp-electron additionally validates the extracted artifact against
     # vscode/build/checksums/electron.txt (which holds the upstream asset's
     # hash). Replace that entry with the hash of our repackaged Electron.
     sed -i -E "s|^[0-9a-f]{64} \*${electronFile}$|$electronSha256 *${electronFile}|" \
       vscode/build/checksums/electron.txt
-    cat > $TMPDIR/electron-fetch-file.cjs <<'VSCODIUM_EOF'
-    const fs = require('fs');
-    const { fileURLToPath } = require('url');
-    const realFetch = globalThis.fetch;
-    globalThis.fetch = function (input, init) {
-      var url = typeof input === 'string' ? input : (input && input.url) || String(input);
-      if (!url.startsWith('file://')) {
-        return realFetch(input, init);
-      }
-      var p = fileURLToPath(url);
-      if (!fs.existsSync(p)) {
-        return Promise.resolve(new Response(null, { status: 404, statusText: 'Not Found' }));
-      }
-      var stat = fs.statSync(p);
-      var body = require('stream').Readable.toWeb(fs.createReadStream(p));
-      return Promise.resolve(new Response(body, {
-        status: 200,
-        statusText: 'OK',
-        headers: { 'content-length': String(stat.size) },
-      }));
-    };
+    # Point that hook at the store copy (`repo` is only consulted for the
+    # Electron distribution; VSCodium's own gulp tasks are untouched).
+    substituteInPlace vscode/build/lib/electron.ts \
+      --replace-fail 'repo: electronAssetResolver,' \
+                     "repo: process.env['VSCODIUM_ELECTRON_ZIP'] ? nixElectronAssetResolver : electronAssetResolver,"
+
+    # Append the resolver itself. Function declarations are hoisted, so the
+    # reference from the `config` object literal above resolves. @electron/get
+    # validates the artifact against the SHASUMS256.txt it asks the same hook
+    # for, so synthesize that one-line file from the checksum we computed above.
+    cat >> vscode/build/lib/electron.ts <<'VSCODIUM_EOF'
+
+    async function nixElectronAssetResolver(opts: { url: string; fileName: string }): Promise<Response> {
+    	const zip = process.env['VSCODIUM_ELECTRON_ZIP']!;
+    	if (opts.fileName === 'SHASUMS256.txt') {
+    		return new Response(process.env['VSCODIUM_ELECTRON_SHASUMS']!);
+    	}
+    	const size = (await fs.promises.stat(zip)).size;
+    	const body = Readable.toWeb(fs.createReadStream(zip)) as ReadableStream<Uint8Array>;
+    	return new Response(body, { status: 200, headers: { 'Content-Length': String(size) } });
+    }
     VSCODIUM_EOF
-    export ELECTRON_MIRROR="file://$electronMirror/"
-    export ELECTRON_GET_NO_PROGRESS=1
-    export NODE_OPTIONS="--require $TMPDIR/electron-fetch-file.cjs''${NODE_OPTIONS:+ $NODE_OPTIONS}"
-    # build.sh assigns NODE_OPTIONS unconditionally, which would drop the
-    # --require shim above. Make it append to the inherited value instead.
-    chmod u+w build.sh
-    substituteInPlace build.sh \
-      --replace-fail 'export NODE_OPTIONS="--max-old-space-size=''${MAX_OLD_SPACE_SIZE}"' \
-                     'export NODE_OPTIONS="--max-old-space-size=''${MAX_OLD_SPACE_SIZE} $NODE_OPTIONS"'
 
     # The desktop app does not embed Electron (see the electronZip handling
     # above and installPhase): it is started with the nixpkgs electron package,
