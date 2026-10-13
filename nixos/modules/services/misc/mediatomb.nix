@@ -57,7 +57,7 @@ let
               <database-file>${name}.db</database-file>
             </sqlite3>
           </storage>
-          <protocolInfo extend="${lib.boolToYesNo cfg.ps3Support}"/>
+          <protocolInfo extend="yes" dlna-seek="yes"/>
           ${lib.optionalString cfg.dsmSupport ''
             <custom-http-headers>
               <add header="X-User-Agent: redsonic"/>
