@@ -57,17 +57,18 @@ let
               <database-file>${name}.db</database-file>
             </sqlite3>
           </storage>
+          <protocolInfo extend="yes" dlna-seek="yes"/>
           ${lib.optionalString cfg.dsmSupport ''
-            <custom-http-headers>
-              <add header="X-User-Agent: redsonic"/>
-            </custom-http-headers>
+          <custom-http-headers>
+            <add header="X-User-Agent: redsonic"/>
+          </custom-http-headers>
 
-            <manufacturerURL>redsonic.com</manufacturerURL>
-            <modelNumber>105</modelNumber>
+          <manufacturerURL>redsonic.com</manufacturerURL>
+          <modelNumber>105</modelNumber>
           ''}
-            ${lib.optionalString cfg.tg100Support ''
-              <upnp-string-limit>101</upnp-string-limit>
-            ''}
+          ${lib.optionalString cfg.tg100Support ''
+          <upnp-string-limit>101</upnp-string-limit>
+          ''}
           <extended-runtime-options>
             <mark-played-items enabled="yes" suppress-cds-updates="yes">
               <string mode="prepend">*</string>
