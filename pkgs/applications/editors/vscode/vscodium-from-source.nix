@@ -11,6 +11,7 @@
   zip,
   electron,
   nodejs_24,
+  node-gyp-build,
   libsecret,
   libkrb5,
   libx11,
@@ -112,20 +113,20 @@ stdenv.mkDerivation (finalAttrs:
   in
 {
   pname = "vscodium";
-  version = "1.135.06055";
+  version = "1.140.06880";
 
   src = fetchFromGitHub {
     owner = "VSCodium";
     repo = "vscodium";
     rev = finalAttrs.version;
-    hash = "sha256-5WRs2Uz2e9bjls9xgldNiWmv4Ttn89SU3OiTC9Heh7U=";
+    hash = "sha256-IBl+RAwz/o3NUObPGM6Oo+9Hb8KeHgeOlcuq38nAY04=";
   };
 
   vscodeSrc = fetchFromGitHub {
     owner = "Microsoft";
     repo = "vscode";
     rev = (lib.importJSON "${finalAttrs.src}/upstream/stable.json").commit;
-    hash = "sha256-HLI+6nAvFaQgc1wjzvqcRvblJUbK9Yh3Z50WNNX5990=";
+    hash = "sha256-ycMv8Ipkw1RIwY0nt84MX0D8m0xE44rEOTDe3LgnBRk=";
   };
 
   ## fetchNpmDeps doesn't correctly process git dependencies
@@ -140,7 +141,7 @@ stdenv.mkDerivation (finalAttrs:
         inherit (finalAttrs) nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-aouTYZ8ImITZ4Z954NzgaYID5wQlhlG9MQ7CxiSM5x8=";
+        outputHash = "sha256-yVvKJZ3j5NjoMkBghggY5hTf1UTT24GZNjTpot43UG0=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
@@ -248,6 +249,7 @@ stdenv.mkDerivation (finalAttrs:
   nativeBuildInputs = [
     nodejs
     nodejs.python
+    node-gyp-build
     pkg-config
     git
     jq
@@ -331,21 +333,70 @@ stdenv.mkDerivation (finalAttrs:
     substituteInPlace vscode/build/npm/preinstall.ts \
       --replace-fail 'installHeaders();' '/* installHeaders() skipped: headers pre-seeded offline */'
 
-    # prepare_vscode.sh runs `npm ci` (with install scripts enabled) in the vscode
-    # root after copying a minimal .npmrc over vscode/.npmrc. That invocation
-    # would run every install script, which is neither needed nor desirable for
-    # the offline build, so skip them (matching the configurePhase pass). We
-    # must rebuild the native addons right here though: this `npm ci` re-creates
-    # the root node_modules, and packages that only ship a binding.gyp (e.g.
-    # @vscode/spdlog) get no implicit node-gyp build when scripts are ignored,
-    # so spdlog.node was missing. The listed packages are the ones
-    # build/.moduleignore expects under build/Release; they are all
-    # node-addon-api (N-API), so the nodejs headers used via --nodedir are fine
-    # here.
-    substituteInPlace prepare_vscode.sh \
-      --replace-fail 'CXX=clang++ npm ci && break' 'CXX=clang++ npm ci --ignore-scripts && break' \
-      --replace-fail 'npm ci && break' 'npm ci --ignore-scripts && break' \
-      --replace-fail 'mv .npmrc.bak .npmrc' 'mv .npmrc.bak .npmrc && npm rebuild --build-from-source @vscode/spdlog @vscode/fs-copyfile @vscode/sqlite3 @vscode/native-watchdog @vscodium/native-keymap @vscodium/policy-watcher kerberos'
+    # --- Hook into the VSCodium build system instead of editing it -----------
+    # build.sh sources prepare_vscode.sh from the VSCodium root and only then
+    # runs the gulp tasks. Upstream rewrites that script between releases (both
+    # its `npm ci` loop and its `.npmrc` handling have moved), so patching its
+    # internals with exact-string substitutes is brittle. Keep the upstream file
+    # pristine and delegate from a wrapper that relies solely on its stable
+    # interface -- it is sourced, and it leaves us back in the VSCodium root.
+    # Everything we need to add lives at this single boundary.
+    mv prepare_vscode.sh prepare_vscode.upstream.sh
+    cat > prepare_vscode.sh <<'VSCODIUM_PREPARE_WRAPPER'
+    #!/usr/bin/env bash
+    # nix wrapper around the pristine upstream prepare_vscode.sh.
+    vscodium_root=$PWD
+
+    # Upstream's `npm ci` runs with install scripts enabled, which makes npm
+    # re-evaluate the dependency tree and reach for the registry -- fatal for an
+    # offline build (ENOTCACHED). Installing straight from the lockfile is what
+    # the configurePhase pass already does, so ignore scripts here too. `npm
+    # run` still honours named scripts with this set but `npm rebuild` does not,
+    # so it is cleared again below.
+    export npm_config_ignore_scripts=true
+    . ./prepare_vscode.upstream.sh
+    unset npm_config_ignore_scripts
+    cd "$vscodium_root"
+    unset vscodium_root
+
+    # Make the native addons build with the nix toolchain. The npm-provided
+    # .bin shims carry a "#!/usr/bin/env node" shebang that cannot resolve in
+    # the sandbox, and some install scripts shell out to `node-gyp-build`
+    # (bufferutil, utf-8-validate) -- that package resolves node-gyp from its
+    # own require path and ignores npm_config_node_gyp. Patch the shebangs,
+    # then replace those two .bin entries: `node-gyp-build` with the nixpkgs
+    # package (it falls back to `node-gyp` on PATH instead of a bundled copy),
+    # and `node-gyp` with the same nodejs-bundled node-gyp that
+    # npm_config_node_gyp already names. So every addon build goes through the
+    # nix node-gyp and the nodejs headers we point it at via `nodedir`.
+    patchShebangs vscode/node_modules
+    mkdir -p vscode/node_modules/.bin
+    cat > vscode/node_modules/.bin/node-gyp <<'VSCODIUM_NODE_GYP_SHIM'
+    #!/bin/sh
+    exec ${nodejs}/bin/node ${nodejs}/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js "$@"
+    VSCODIUM_NODE_GYP_SHIM
+    chmod +x vscode/node_modules/.bin/node-gyp
+    ln -sf ${node-gyp-build}/bin/node-gyp-build vscode/node_modules/.bin/node-gyp-build
+    ln -sf ${node-gyp-build}/bin/node-gyp-build-optional vscode/node_modules/.bin/node-gyp-build-optional
+    ln -sf ${node-gyp-build}/bin/node-gyp-build-test vscode/node_modules/.bin/node-gyp-build-test
+
+    # That `npm ci` recreated vscode/node_modules without running any install
+    # script, so the native addons have no build/Release/*.node yet. Rebuild
+    # them. The set is discovered from the tree instead of being hardcoded, so
+    # it tracks vscode's dependency changes; platform-specific addons
+    # (windows-*, fsevents) are simply not installed on this platform. They are
+    # all node-addon-api (N-API), so the nodejs headers selected through
+    # node-gyp's `nodedir` are valid for the Electron app as well.
+    native=$(cd vscode && find node_modules -maxdepth 3 -name binding.gyp \
+      -not -path '*/node_modules/*/node_modules/*' 2>/dev/null \
+      | sed -e 's|^node_modules/||' -e 's|/binding\.gyp$||')
+    if [ -n "$native" ]; then
+      echo "Rebuilding native addons in vscode/: $native"
+      npm --prefix vscode rebuild --build-from-source $native
+    else
+      echo "warning: no binding.gyp addons found to rebuild" >&2
+    fi
+    VSCODIUM_PREPARE_WRAPPER
 
     # Serve the repackaged nixpkgs Electron zip to @vscode/gulp-electron through
     # its `repo` option, which is gulp-electron's custom-downloader hook -- the
