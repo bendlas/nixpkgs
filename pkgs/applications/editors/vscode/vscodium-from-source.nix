@@ -653,7 +653,7 @@ stdenv.mkDerivation (finalAttrs:
     homepage = "https://github.com/VSCodium/vscodium";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [
-      bobby285271
+      bendlas
     ];
     platforms = [
       "x86_64-linux"
