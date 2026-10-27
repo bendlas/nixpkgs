@@ -97,13 +97,13 @@ stdenv.mkDerivation (finalAttrs:
     electronDist = electron.dist;
     electronZip = runCommand electronFile {
       nativeBuildInputs = [ zip ];
-    } ''
       # The nix store is read-only: directories are 0555 and files 0444. If we
       # zipped it as-is, the archive would record those modes, and
       # gulp-electron's extraction (vinyl-fs) cannot write files into a 0555
       # directory -- it deadlocks instead of reporting an error, stalling the
       # package-linux-x64 task. Stage a writable copy so the zip carries the
       # normal 0755/0644 modes of an official Electron archive.
+    } ''
       mkdir dist
       cp -r ${electronDist}/. dist/
       chmod -R u+w dist
@@ -113,20 +113,20 @@ stdenv.mkDerivation (finalAttrs:
   in
 {
   pname = "vscodium";
-  version = "1.140.06880";
+  version = "1.143.17183";
 
   src = fetchFromGitHub {
     owner = "VSCodium";
     repo = "vscodium";
     rev = finalAttrs.version;
-    hash = "sha256-IBl+RAwz/o3NUObPGM6Oo+9Hb8KeHgeOlcuq38nAY04=";
+    hash = "sha256-wzOie7h/jwJL/dnM1z7k0cz7rSATVCQ6nsuPjcx1NWs=";
   };
 
   vscodeSrc = fetchFromGitHub {
     owner = "Microsoft";
     repo = "vscode";
     rev = (lib.importJSON "${finalAttrs.src}/upstream/stable.json").commit;
-    hash = "sha256-ycMv8Ipkw1RIwY0nt84MX0D8m0xE44rEOTDe3LgnBRk=";
+    hash = "sha256-GuR+613RHZ876yC1e1glj0TC+4syMDG0SV7IVKY7S+4=";
   };
 
   ## fetchNpmDeps doesn't correctly process git dependencies
@@ -141,7 +141,7 @@ stdenv.mkDerivation (finalAttrs:
         inherit (finalAttrs) nativeBuildInputs;
         outputHashMode = "recursive";
         outputHashAlgo = "sha256";
-        outputHash = "sha256-yVvKJZ3j5NjoMkBghggY5hTf1UTT24GZNjTpot43UG0=";
+        outputHash = "sha256-VplV0b7QUVcr3MnnoPt+dktX5kTn/1OC1MoRAqBOSJA=";
         env = {
           FORCE_EMPTY_CACHE = true;
           FORCE_GIT_DEPS = true;
@@ -149,7 +149,7 @@ stdenv.mkDerivation (finalAttrs:
           npm_config_progress = false;
           npm_config_cafile = "${cacert}/etc/ssl/certs/ca-bundle.crt";
         };
-      } ''
+      } (''
         runPhase unpackPhase
         export HOME=$TMPDIR/home
         mkdir -p $HOME
@@ -162,7 +162,7 @@ stdenv.mkDerivation (finalAttrs:
           ${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out"
         )
         done
-
+      ''
         # vscodium's prepare_vscode.sh rewrites several package-lock.json files
         # at build time (e.g. 20-keymap-use-custom-lib.patch swaps native-keymap
         # for @vscodium/native-keymap and bumps prebuild-install to a version
@@ -170,6 +170,7 @@ stdenv.mkDerivation (finalAttrs:
         # lockfiles too, otherwise the offline `npm ci` in prepare_vscode.sh
         # fails with ENOTCACHED. prefetch-npm-deps is reentrant: tarballs that
         # were already cached by the first pass are skipped.
+      + ''
         cp -R ${finalAttrs.src}/patches ./vscodium-patches
         cp -rp ${finalAttrs.src}/src/stable/. .
         cp -f ${finalAttrs.src}/LICENSE LICENSE.txt
@@ -216,7 +217,7 @@ stdenv.mkDerivation (finalAttrs:
         )
         done
         rm -f "$out/package-lock.json"
-      '';
+      '');
 
   env = {
     # skip unnecessary binary downloads
@@ -276,22 +277,24 @@ stdenv.mkDerivation (finalAttrs:
   postUnpack = ''
     cp -R ${finalAttrs.vscodeSrc} $sourceRoot/vscode
     chmod -R +w $sourceRoot/vscode
-
+  ''
     # build/gulpfile.reh.ts derives the server node version from
     # remote/.npmrc's `target=` and downloads a matching node.js into
     # .build/node/v<version>/<platform>-<arch>/ if it is missing (the
     # vscode-reh-web-...-ci tasks depend on it). Pin the target to the nodejs we
     # build with and pre-seed that directory so the offline build skips the
     # download.
+  + ''
     sed -i 's|^target=.*|target="${nodejs.version}"|' $sourceRoot/vscode/remote/.npmrc
     mkdir -p $sourceRoot/vscode/.build/node/v${nodejs.version}/${nodeBuildTarget}
     ln -sf ${nodejs}/bin/node $sourceRoot/vscode/.build/node/v${nodejs.version}/${nodeBuildTarget}/node
-
+  ''
     # VSCodium's shell scripts use `#!/usr/bin/env ...` shebangs, which do not
     # resolve in the Nix sandbox (there is no /usr/bin/env). Several are executed
     # directly during the build (e.g. undo_telemetry.sh, invoked by
     # prepare_vscode.sh), so rewrite the resolvable ones to their store paths.
     # node_modules is not populated yet; the configurePhase loop patches those.
+  + ''
     patchShebangs $sourceRoot
   '';
 
@@ -301,10 +304,13 @@ stdenv.mkDerivation (finalAttrs:
     mkdir -p $TMPDIR
     cp -R $npmCache $TMPDIR/cache
     chmod -R +w $TMPDIR/cache
+  ''
     # Export the (shell-expanded) cache path so that `npm ci` invocations
     # without an explicit --cache (e.g. build/npm/preinstall.ts) use the
     # populated cache instead of npm's default cache location.
+  + ''
     export npm_config_cache=$TMPDIR/cache
+  ''
     # Native modules are compiled against the nodejs headers via node-gyp's
     # --nodedir (npm_package_config_node_gyp_nodedir in `env`), so node-gyp
     # never enters its "download headers into the dev dir" path and no dev-dir
@@ -315,6 +321,7 @@ stdenv.mkDerivation (finalAttrs:
     # before the marketplace/GitHub branches in build/lib/builtInExtensions.ts,
     # and it verifies each file against product.json's sha256. The paths are
     # relative to the vscode root (where the gulp task runs).
+  + ''
     mkdir -p vscode/.build/vsix
     cp ${builtInExtensionVsix."ms-vscode.js-debug"} vscode/.build/vsix/ms-vscode.js-debug.vsix
     cp ${builtInExtensionVsix."ms-vscode.js-debug-companion"} vscode/.build/vsix/ms-vscode.js-debug-companion.vsix
@@ -323,16 +330,17 @@ stdenv.mkDerivation (finalAttrs:
       '.builtInExtensions |= map(if $vsix[.name] then .vsix = $vsix[.name] else . end)' \
       vscode/product.json > vscode/product.json.tmp
     mv vscode/product.json.tmp vscode/product.json
-
+  ''
     # build/npm/preinstall.ts runs `npm ci` inside build/npm/gyp and then
     # `node-gyp install` to download electron/node headers. We have already
     # installed build/npm/gyp's node-gyp (see the configurePhase loop) and we
     # point node-gyp at the nodejs headers via --nodedir, so disable that step
     # to keep the offline build from re-running npm ci (which wipes the
     # .bin/node-gyp symlink) and attempting a network download.
+  + ''
     substituteInPlace vscode/build/npm/preinstall.ts \
       --replace-fail 'installHeaders();' '/* installHeaders() skipped: headers pre-seeded offline */'
-
+  ''
     # --- Hook into the VSCodium build system instead of editing it -----------
     # build.sh sources prepare_vscode.sh from the VSCodium root and only then
     # runs the gulp tasks. Upstream rewrites that script between releases (both
@@ -341,11 +349,13 @@ stdenv.mkDerivation (finalAttrs:
     # pristine and delegate from a wrapper that relies solely on its stable
     # interface -- it is sourced, and it leaves us back in the VSCodium root.
     # Everything we need to add lives at this single boundary.
+  + ''
     mv prepare_vscode.sh prepare_vscode.upstream.sh
     cat > prepare_vscode.sh <<'VSCODIUM_PREPARE_WRAPPER'
     #!/usr/bin/env bash
     # nix wrapper around the pristine upstream prepare_vscode.sh.
     vscodium_root=$PWD
+  ''
 
     # Upstream's `npm ci` runs with install scripts enabled, which makes npm
     # re-evaluate the dependency tree and reach for the registry -- fatal for an
@@ -353,12 +363,13 @@ stdenv.mkDerivation (finalAttrs:
     # the configurePhase pass already does, so ignore scripts here too. `npm
     # run` still honours named scripts with this set but `npm rebuild` does not,
     # so it is cleared again below.
+  + ''
     export npm_config_ignore_scripts=true
     . ./prepare_vscode.upstream.sh
     unset npm_config_ignore_scripts
     cd "$vscodium_root"
     unset vscodium_root
-
+  ''
     # Make the native addons build with the nix toolchain. The npm-provided
     # .bin shims carry a "#!/usr/bin/env node" shebang that cannot resolve in
     # the sandbox, and some install scripts shell out to `node-gyp-build`
@@ -369,6 +380,7 @@ stdenv.mkDerivation (finalAttrs:
     # and `node-gyp` with the same nodejs-bundled node-gyp that
     # npm_config_node_gyp already names. So every addon build goes through the
     # nix node-gyp and the nodejs headers we point it at via `nodedir`.
+  + ''
     patchShebangs vscode/node_modules
     mkdir -p vscode/node_modules/.bin
     cat > vscode/node_modules/.bin/node-gyp <<'VSCODIUM_NODE_GYP_SHIM'
@@ -379,7 +391,7 @@ stdenv.mkDerivation (finalAttrs:
     ln -sf ${node-gyp-build}/bin/node-gyp-build vscode/node_modules/.bin/node-gyp-build
     ln -sf ${node-gyp-build}/bin/node-gyp-build-optional vscode/node_modules/.bin/node-gyp-build-optional
     ln -sf ${node-gyp-build}/bin/node-gyp-build-test vscode/node_modules/.bin/node-gyp-build-test
-
+  ''
     # That `npm ci` recreated vscode/node_modules without running any install
     # script, so the native addons have no build/Release/*.node yet. Rebuild
     # them. The set is discovered from the tree instead of being hardcoded, so
@@ -387,6 +399,7 @@ stdenv.mkDerivation (finalAttrs:
     # (windows-*, fsevents) are simply not installed on this platform. They are
     # all node-addon-api (N-API), so the nodejs headers selected through
     # node-gyp's `nodedir` are valid for the Electron app as well.
+  + ''
     native=$(cd vscode && find node_modules -maxdepth 3 -name binding.gyp \
       -not -path '*/node_modules/*/node_modules/*' 2>/dev/null \
       | sed -e 's|^node_modules/||' -e 's|/binding\.gyp$||')
@@ -397,7 +410,7 @@ stdenv.mkDerivation (finalAttrs:
       echo "warning: no binding.gyp addons found to rebuild" >&2
     fi
     VSCODIUM_PREPARE_WRAPPER
-
+  ''
     # Serve the repackaged nixpkgs Electron zip to @vscode/gulp-electron through
     # its `repo` option, which is gulp-electron's custom-downloader hook -- the
     # same one Microsoft's product builds use for their Azure artifact feed (see
@@ -406,24 +419,30 @@ stdenv.mkDerivation (finalAttrs:
     # against, so export the zip and its checksum line and let the resolver
     # answer from the store; nothing is downloaded. (ELECTRON_SKIP_BINARY_DOWNLOAD
     # only covers the npm `electron` package, not this gulp/@electron/get path.)
+  + ''
     electronSha256=$(sha256sum ${electronZip} | cut -d' ' -f1)
     export VSCODIUM_ELECTRON_ZIP=${electronZip}
     export VSCODIUM_ELECTRON_SHASUMS="$electronSha256 *${electronFile}"
+  ''
     # gulp-electron additionally validates the extracted artifact against
     # vscode/build/checksums/electron.txt (which holds the upstream asset's
     # hash). Replace that entry with the hash of our repackaged Electron.
+  + ''
     sed -i -E "s|^[0-9a-f]{64} \*${electronFile}$|$electronSha256 *${electronFile}|" \
       vscode/build/checksums/electron.txt
+  ''
     # Point that hook at the store copy (`repo` is only consulted for the
     # Electron distribution; VSCodium's own gulp tasks are untouched).
+  + ''
     substituteInPlace vscode/build/lib/electron.ts \
       --replace-fail 'repo: electronAssetResolver,' \
                      "repo: process.env['VSCODIUM_ELECTRON_ZIP'] ? nixElectronAssetResolver : electronAssetResolver,"
-
+  ''
     # Append the resolver itself. Function declarations are hoisted, so the
     # reference from the `config` object literal above resolves. @electron/get
     # validates the artifact against the SHASUMS256.txt it asks the same hook
     # for, so synthesize that one-line file from the checksum we computed above.
+  + ''
     cat >> vscode/build/lib/electron.ts <<'VSCODIUM_EOF'
 
     async function nixElectronAssetResolver(opts: { url: string; fileName: string }): Promise<Response> {
@@ -436,13 +455,14 @@ stdenv.mkDerivation (finalAttrs:
     	return new Response(body, { status: 200, headers: { 'Content-Length': String(size) } });
     }
     VSCODIUM_EOF
-
+  ''
     # The desktop app does not embed Electron (see the electronZip handling
     # above and installPhase): it is started with the nixpkgs electron package,
     # so the app directory is not next to the Electron binary. The CLI starts
     # the GUI by re-execing process.execPath, which would make Electron load
     # its own default app instead; pass the app directory explicitly. Electron
     # keeps `--app=` in process.argv, hence the matching strip in argvHelper.
+  + ''
     substituteInPlace vscode/src/vs/code/node/cli.ts \
       --replace-fail 'child = spawn(process.execPath, spawnArgs, options);' \
                      "spawnArgs.unshift('--app=' + getAppRoot()); child = spawn(process.execPath, spawnArgs, options);"
@@ -457,12 +477,14 @@ stdenv.mkDerivation (finalAttrs:
   ## unpack all of the prefetched node_modules folders
   + ''
     ( cd vscode
+  ''
       # `build/rspack` is only used by the component-explorer / css-order dev
       # tooling and is not needed to build or package the editor. Its lockfile
       # records most of its tree as unresolved peer dependencies (no
       # `resolved`/`integrity`), so `npm ci` has to query the registry for them,
       # which the offline npm cache cannot satisfy (ENOTCACHED). Upstream
       # installs it separately for the fixture workflows, so skip it here.
+  + ''
       for p in $(find -name package-lock.json -not -path '*/extensions/copilot/*' -not -path '*/build/rspack/*' -not -path './build/package-lock.json' -exec dirname {} \;)
       do (
         echo "Setting up $p/node_modules"
@@ -481,7 +503,7 @@ stdenv.mkDerivation (finalAttrs:
         fi
       )
       done
-
+  ''
       # `build/` has its own .npmrc (legacy-peer-deps) and lockfile, and the
       # VSCodium patch set makes it depend on @vscodium/vsce:
       # patches/00-vsce-use-custom-lib.patch rewrites build/lib/extensions.ts's
@@ -491,6 +513,7 @@ stdenv.mkDerivation (finalAttrs:
       # the later gulp task would fail to find @vscodium/vsce. Apply just those
       # two file hunks, install from the patched lockfile, then restore the
       # files so prepare_vscode.sh can apply the full patch itself.
+  + ''
       (
         cp build/package.json build/package.json.vscodium-bak
         cp build/package-lock.json build/package-lock.json.vscodium-bak
@@ -549,11 +572,14 @@ stdenv.mkDerivation (finalAttrs:
     runHook preBuild
 
     export SHOULD_BUILD="yes"
+  ''
     # the REH (headless remote) build needs a separate `remote` rebuild that is
     # currently not wired up here; it is not required for the desktop + web
     # editions, so skip it for now.
+  + ''
     export SHOULD_BUILD_REH="no"
     export SHOULD_BUILD_REH_WEB="yes"
+  ''
     # build_cli.sh builds the Rust tunnel CLI (bin/codium-tunnel).
     # It is not guarded by anything except SHOULD_BUILD_CLI (which only
     # VSCodium's CI sets), and it reaches the network twice: it runs a bare
@@ -563,6 +589,7 @@ stdenv.mkDerivation (finalAttrs:
     # need it to launch: bin/codium is resources/linux/bin/code.sh driving
     # out/cli.js. Skip it; wire the Rust CLI up separately if tunnels are
     # wanted.
+  + ''
     export SHOULD_BUILD_CLI="no"
     export CI_BUILD="no"
     export OS_NAME="${if stdenv.hostPlatform.isDarwin then "osx" else "linux"}"
@@ -579,21 +606,24 @@ stdenv.mkDerivation (finalAttrs:
 
   installPhase = ''
     runHook preInstall
-
+  ''
     # Desktop build (VSCode-linux-${vsBuildArch}). gulp-electron merges the
     # compiled sources with an Electron distribution; ship only the app payload
     # and drop that runtime, because the app is started with the nixpkgs
     # electron package (see bin/codium below). This keeps Electron's
     # rpath/patchelf handling inside the electron package.
+  + ''
     mkdir -p "$out/share/vscodium"
     cp -R -T "VSCode-linux-${vsBuildArch}/resources" "$out/share/vscodium/resources"
 
     mkdir -p "$out/bin"
     cat > "$out/bin/codium" <<'VSCODIUM_EOF'
     #!/bin/sh
+  ''
     # ELECTRON_RUN_AS_NODE runs Electron as plain node, so the CLI (out/cli.js)
     # can parse the arguments and then re-exec Electron for the GUI (cli.ts
     # passes an explicit --app=, since the runtime is not next to the app).
+  + ''
     export ELECTRON_RUN_AS_NODE=1
     exec ${electron}/bin/electron "${placeholder "out"}/share/vscodium/resources/app/out/cli.js" "$@"
     VSCODIUM_EOF
