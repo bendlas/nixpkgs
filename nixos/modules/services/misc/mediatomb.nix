@@ -48,7 +48,7 @@ let
           </ui>
           <name>${cfg.serverName}</name>
           <udn>uuid:${cfg.uuid}</udn>
-          <home>${cfg.dataDir}</home>
+          <home override="yes">${cfg.dataDir}</home>
           <interface>${cfg.interface}</interface>
           <webroot>${pkg}/share/${name}/web</webroot>
           <pc-directory upnp-hide="${lib.boolToYesNo cfg.pcDirectoryHide}"/>
@@ -57,7 +57,6 @@ let
               <database-file>${name}.db</database-file>
             </sqlite3>
           </storage>
-          <protocolInfo extend="yes" dlna-seek="yes"/>
           ${lib.optionalString cfg.dsmSupport ''
             <custom-http-headers>
               <add header="X-User-Agent: redsonic"/>
@@ -83,11 +82,10 @@ let
           ${lib.concatMapStrings toMediaDirectory cfg.mediaDirectories}
           </autoscan>
           <scripting script-charset="UTF-8">
-            <common-script>${pkg}/share/${name}/js/common.js</common-script>
-            <playlist-script>${pkg}/share/${name}/js/playlists.js</playlist-script>
-            <virtual-layout type="builtin">
-              <import-script>${pkg}/share/${name}/js/import.js</import-script>
-            </virtual-layout>
+            <script-folder>
+              <common>${pkg}/share/${name}/js</common>
+            </script-folder>
+            <virtual-layout type="builtin"/>
           </scripting>
           <mappings>
             <extension-mimetype ignore-unknown="no">
@@ -141,15 +139,6 @@ let
               <treat mimetype="application/x-iso9660-image" as="dvd"/>
             </mimetype-contenttype>
           </mappings>
-          <online-content>
-            <YouTube enabled="no" refresh="28800" update-at-start="no" purge-after="604800" racy-content="exclude" format="mp4" hd="no">
-              <favorites user="${name}"/>
-              <standardfeed feed="most_viewed" time-range="today"/>
-              <playlists user="${name}"/>
-              <uploads user="${name}"/>
-              <standardfeed feed="recently_featured" time-range="today"/>
-            </YouTube>
-          </online-content>
         </import>
         ${cfg.transcodingConfig}
       </config>
