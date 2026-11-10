@@ -42,12 +42,14 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-H8uzTohV30NU1wYhr/WXN76g1zDqGEzRE5QZcmcM7Jc=";
   };
 
-  # Fix build with linux-headers 7.3
   patches = [
+    # Fix build with linux-headers 7.3
     (fetchpatch {
       url = "https://github.com/koverstreet/bcachefs-tools/commit/adef3bf68249ac674ddc2cbdfe8c7d0d153e15a8.diff";
       hash = "sha256-nQsL+1fTQ4ltVyTIwIpO9z9nS66Dtr6WTepBZQ0phL8=";
     })
+    # Fix build with linux 6.18 >= .64
+    ./0001-vfs-use-native-inode-state-accessors-on-Linux-6.18.6.patch
   ];
 
   cargoDeps = rustPlatform.fetchCargoVendor {
