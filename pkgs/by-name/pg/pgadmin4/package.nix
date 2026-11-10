@@ -2,7 +2,6 @@
   lib,
   python3,
   fetchFromGitHub,
-  substitute,
   zlib,
   nixosTests,
   postgresqlTestHook,
@@ -15,14 +14,14 @@
 
 let
   pname = "pgadmin";
-  version = "9.18";
-  yarnHash = "sha256-D9LN9+CsVTvfZKDsHrWUD1uvsa033tj34a52DNwYaDc=";
+  version = "9.19";
+  yarnHash = "sha256-Ij7NwZQIV8+cLveBnzuAx9K5TR3LBqwg3anVElydRGE=";
 
   src = fetchFromGitHub {
     owner = "pgadmin-org";
     repo = "pgadmin4";
     rev = "REL-${lib.versions.major version}_${lib.versions.minor version}";
-    hash = "sha256-oaNheNF4e1nL45fQM9/2ZIdLDwVvKWIRJnR93KmqR3M=";
+    hash = "sha256-yxKAqljXA7c8xlY3up8pV0m6SMdAXQl0ixZIGibFw58=";
   };
 
   # keep the scope, as it is used throughout the derivation and tests
@@ -54,6 +53,9 @@ pythonPackages.buildPythonApplication rec {
 
   # from Dockerfile
   env.CPPFLAGS = "-DPNG_ARM_NEON_OPT=0";
+  # yarn 4.14+ defaults to enableScripts=false, but the frontend build needs
+  # dependency install scripts (e.g. optipng-bin)
+  env.YARN_ENABLE_SCRIPTS = "1";
 
   format = "setuptools";
 
@@ -114,7 +116,9 @@ pythonPackages.buildPythonApplication rec {
       export LD=$CC # https://github.com/imagemin/optipng-bin/issues/108
       yarnBerryConfigHook
     )
-    NODE_ENV=production yarn webpacker
+    # Build the production bundle: a development build uses webpack's eval
+    # devtool, which pgAdmin's Content-Security-Policy rejects at runtime.
+    NODE_ENV=production NODE_OPTIONS=--max-old-space-size=3072 yarn webpacker
     cp -r * ../pip-build/pgadmin4
     # save some disk space
     rm -rf ../pip-build/pgadmin4/node_modules
@@ -245,11 +249,15 @@ pythonPackages.buildPythonApplication rec {
       substituteInPlace $files --replace-quiet "localhost" "$PGHOST"
     done
 
-    ## Browser test ##
-    python regression/runtests.py --pkg browser --exclude ${skippedTests}
+    # The resql test only looks at objects that do not exist yet on the test
+    # database. Run it before the browser tests, which create e.g. a "test_scenario"
+    # cast, as that would make the "Create ... Cast" resql scenarios fail.
 
     ## Reverse engineered SQL test ##
     python regression/runtests.py --pkg resql
+
+    ## Browser test ##
+    python regression/runtests.py --pkg browser --exclude ${skippedTests}
 
     runHook postCheck
   '';

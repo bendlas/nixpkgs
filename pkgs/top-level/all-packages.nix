@@ -2266,6 +2266,8 @@ with pkgs;
     prefetch-npm-deps
     ;
 
+  fetch-npm-deps-reentrant = callPackages ../build-support/node/prefetch-npm-deps-reentrant { };
+    
   importNpmLock = callPackages ../build-support/node/import-npm-lock { };
 
   ldapdomaindump = with python3Packages; toPythonApplication ldapdomaindump;
@@ -2575,6 +2577,8 @@ with pkgs;
   plan9port = callPackage ../tools/system/plan9port {
     inherit (darwin) DarwinTools;
   };
+
+  planck = callPackage ../development/interpreters/clojurescript/planck { };
 
   platformio = if stdenv.hostPlatform.isLinux then platformio-chrootenv else platformio-core;
 
@@ -3540,6 +3544,11 @@ with pkgs;
 
   dotnetPackages = recurseIntoAttrs (callPackage ./dotnet-packages.nix { });
 
+  icedtea7 = callPackage ../development/compilers/icedtea rec {
+    bootjdk = openjdk-bootstrap;
+    giflib = giflib_5_0;
+  };
+
   idrisPackages = recurseIntoAttrs (
     callPackage ../development/idris-modules {
       idris-no-deps = haskellPackages.idris;
@@ -3600,6 +3609,8 @@ with pkgs;
   # default JDK
   jdk = jdk21;
   jdk_headless = jdk21_headless;
+
+  jdkBootstrapLibre = callPackage ../development/compilers/openjdk/bootstrap-libre { };
 
   # Since the introduction of the Java Platform Module System in Java 9, Java
   # no longer ships a separate JRE package.
@@ -5275,6 +5286,9 @@ with pkgs;
     ffmpeg-headless
     ffmpeg-full
     ;
+
+  v4l2-request-ffmpeg = callPackage ../development/libraries/v4l2-request-ffmpeg { };
+  v4l2-request-mpv = wrapMpv (mpv-unwrapped.override { ffmpeg = v4l2-request-ffmpeg; }) {};
 
   fftwSinglePrec = fftw.override { precision = "single"; };
   fftwFloat = fftwSinglePrec; # the configure option is just an alias
@@ -7543,6 +7557,24 @@ with pkgs;
     # break some cyclic dependencies
     util-linux = util-linuxMinimal;
   };
+  systemd_257 = callPackage ../os-specific/linux/systemd-257 {
+    # break some cyclic dependencies
+    util-linux = util-linuxMinimal;
+    # provide a super minimal gnupg used for systemd-machined
+    gnupg = gnupg.override {
+      enableMinimal = true;
+      guiSupport = false;
+    };
+  };
+  systemd_260 = callPackage ../os-specific/linux/systemd-260 {
+    # break some cyclic dependencies
+    util-linux = util-linuxMinimal;
+    # provide a super minimal gnupg used for systemd-machined
+    gnupg = gnupg.override {
+      enableMinimal = true;
+      guiSupport = false;
+    };
+  };
   systemdMinimal = systemd.override {
     pname = "systemd-minimal";
     withAcl = false;
@@ -8991,6 +9023,8 @@ with pkgs;
   vscodium-fhs = vscodium.fhs;
   vscodium-fhsWithPackages = vscodium.fhsWithPackages;
 
+  vscodiumFromSource = callPackage ../applications/editors/vscode/vscodium-from-source.nix { };
+
   antigravity-ide-fhs = antigravity-ide.fhs;
   antigravity-ide-fhsWithPackages = antigravity-ide.fhsWithPackages;
 
@@ -10110,11 +10144,16 @@ with pkgs;
   mfcl3770cdwlpr = (callPackage ../misc/cups/drivers/brother/mfcl3770cdw { }).driver;
   mfcl3770cdwcupswrapper = (callPackage ../misc/cups/drivers/brother/mfcl3770cdw { }).cupswrapper;
 
+  mfc6490cwcupswrapper = callPackage ../misc/cups/drivers/mfc6490cwcupswrapper { };
+  mfc6490cwlpr = callPackage ../misc/cups/drivers/mfc6490cwlpr { };
+
   samsung-unified-linux-driver = samsung-unified-linux-driver_4_01_17;
 
   sane-backends = callPackage ../applications/graphics/sane/backends (config.sane or { });
 
   sane-drivers = callPackage ../applications/graphics/sane/drivers.nix { };
+
+  brscan3 = callPackage ../applications/graphics/sane/backends/brscan3 { };
 
   mkSaneConfig = callPackage ../applications/graphics/sane/config.nix { };
 
