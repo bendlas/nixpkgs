@@ -1,0 +1,38 @@
+PostgreSQL 18.7 added attribute versioning. To stay backpatchable, it stores
+the version of each attribute in pg_attribute.attoptions under the reserved
+key "pg_attver", which users cannot set.
+
+pgAdmin reads attoptions and presents them as editable column Variables, so
+columns of tables and foreign tables show up with a bogus, non-settable
+"pg_attver" option, and the reverse engineered SQL contains a
+SET (pg_attver=...) clause. Drop the key when parsing the options, as
+PostgreSQL itself does for spuriously supplied values.
+
+See https://www.postgresql.org/docs/18/release-18-7.html and
+src/backend/catalog/README.attver.md in the PostgreSQL sources.
+
+--- a/web/pgadmin/browser/server_groups/servers/databases/schemas/tables/columns/utils.py
++++ b/web/pgadmin/browser/server_groups/servers/databases/schemas/tables/columns/utils.py
+@@ -648,15 +648,22 @@
+             data['attprecision'] = None
+ 
+     return data
++
++
++# Reserved key used internally by PostgreSQL 18.7+ for attribute
++# versioning, see src/backend/catalog/README.attver.md
++ATTRIBUTE_VERSION_OPTION = 'pg_attver'
+ 
+ 
+ def parse_column_variables(col_variables):
+     # We need to format variables according to client js collection
+     spcoptions = []
+     if col_variables is not None:
+         for spcoption in col_variables:
+             k, v = spcoption.split('=')
++            if k == ATTRIBUTE_VERSION_OPTION:
++                continue
+             spcoptions.append({'name': k, 'value': v})
+     return spcoptions
+ 
+ 
