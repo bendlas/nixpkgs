@@ -1,0 +1,35 @@
+From 32e50e226ebad10a8b986508bffbf9e4b415adc0 Mon Sep 17 00:00:00 2001
+From: Herwig Hochleitner <herwig@bendlas.net>
+Date: Fri, 20 Nov 2026 21:47:15 +0100
+Subject: [PATCH] vfs: use native inode state accessors on Linux 6.18.64
+
+Linux 6.18.64 backported "fs: provide accessors for ->i_state"
+(ba8d7976db29). Its inline definitions collide with the compatibility
+helpers in bcachefs 1.39.7.
+
+Use the kernel's helpers on 6.18.64 and later. Keep the prior cutoff for
+userspace and the compatibility helpers for older kernels.
+
+Co-Authored-By: Stijn Tintel <stijn@linux-ipv6.be>
+---
+ fs/vfs/fs.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/vfs/fs.h b/fs/vfs/fs.h
+index d7909cb94..5870828d5 100644
+--- a/fs/vfs/fs.h
++++ b/fs/vfs/fs.h
+@@ -13,7 +13,9 @@
+ #include <linux/stat.h>
+ #include <linux/version.h>
+ 
+-#if !defined(__KERNEL__) || LINUX_VERSION_CODE < KERNEL_VERSION(6,19,0)
++#if !defined(__KERNEL__) || \
++	LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 64) && \
++        LINUX_VERSION_CODE < KERNEL_VERSION(6,19,0)
+ static inline unsigned inode_state_read(struct inode *inode)
+ {
+ 	return inode->i_state;
+-- 
+2.56.0
+
