@@ -139,7 +139,15 @@ EOF
 
 addEntry $default default >> $tmpFile
 
-if [ "$numGenerations" -gt 0 ]; then
+if [ "$numGenerations" -eq 0 ]; then
+    # No generation scan was requested (e.g. an offline installer that copies a
+    # single toplevel). The default system's own specialisations still need
+    # boot entries, so add them here. Guarded by '-g 0' so the normal
+    # generation loop (which already covers them) is unaffected on target.
+    for specialisation in $(ls "$default/specialisation" 2>/dev/null | sort); do
+        addEntry "$default/specialisation/$specialisation" "$specialisation"
+    done >> $tmpFile
+elif [ "$numGenerations" -gt 0 ]; then
     # Add up to $numGenerations generations of the system profile to the menu,
     # in reverse (most recent to least recent) order.
     for generation in $(

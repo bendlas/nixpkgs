@@ -15,14 +15,14 @@
 
 let
   pname = "pgadmin";
-  version = "9.18";
-  yarnHash = "sha256-D9LN9+CsVTvfZKDsHrWUD1uvsa033tj34a52DNwYaDc=";
+  version = "9.19";
+  yarnHash = "sha256-Ij7NwZQIV8+cLveBnzuAx9K5TR3LBqwg3anVElydRGE=";
 
   src = fetchFromGitHub {
     owner = "pgadmin-org";
     repo = "pgadmin4";
     rev = "REL-${lib.versions.major version}_${lib.versions.minor version}";
-    hash = "sha256-oaNheNF4e1nL45fQM9/2ZIdLDwVvKWIRJnR93KmqR3M=";
+    hash = "sha256-yxKAqljXA7c8xlY3up8pV0m6SMdAXQl0ixZIGibFw58=";
   };
 
   # keep the scope, as it is used throughout the derivation and tests
@@ -62,7 +62,9 @@ pythonPackages.buildPythonApplication rec {
     ./expose-setup.py.patch
     # check for permission of /etc/pgadmin/config_system and don't fail
     ./check-system-config-dir.patch
-
+    # don't present PostgreSQL's internal attribute version option (18.7+)
+    # as a user editable column variable
+    ./hide-attribute-version-option.patch
   ];
 
   postPatch = ''

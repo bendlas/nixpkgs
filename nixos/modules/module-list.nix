@@ -144,6 +144,7 @@
   ./i18n/input-method/uim.nix
   ./image/images.nix
   ./installer/tools/tools.nix
+  ./installer/mounted-install/mounted-install.nix
   ./misc/assertions.nix
   ./misc/crashdump.nix
   ./misc/documentation.nix
@@ -1892,6 +1893,7 @@
   ./services/web-apps/tuliprox.nix
   ./services/web-apps/umami.nix
   ./services/web-apps/vikunja.nix
+  ./services/web-apps/vscodium-server.nix
   ./services/web-apps/wakapi.nix
   ./services/web-apps/wanderer.nix
   ./services/web-apps/wealthfolio.nix
