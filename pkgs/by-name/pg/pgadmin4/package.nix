@@ -249,11 +249,15 @@ pythonPackages.buildPythonApplication rec {
       substituteInPlace $files --replace-quiet "localhost" "$PGHOST"
     done
 
-    ## Browser test ##
-    python regression/runtests.py --pkg browser --exclude ${skippedTests}
+    # The resql test only looks at objects that do not exist yet on the test
+    # database. Run it before the browser tests, which create e.g. a "test_scenario"
+    # cast, as that would make the "Create ... Cast" resql scenarios fail.
 
     ## Reverse engineered SQL test ##
     python regression/runtests.py --pkg resql
+
+    ## Browser test ##
+    python regression/runtests.py --pkg browser --exclude ${skippedTests}
 
     runHook postCheck
   '';
