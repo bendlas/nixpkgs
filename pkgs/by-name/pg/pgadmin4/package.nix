@@ -62,7 +62,9 @@ pythonPackages.buildPythonApplication rec {
     ./expose-setup.py.patch
     # check for permission of /etc/pgadmin/config_system and don't fail
     ./check-system-config-dir.patch
-
+    # don't present PostgreSQL's internal attribute version option (18.7+)
+    # as a user editable column variable
+    ./hide-attribute-version-option.patch
   ];
 
   postPatch = ''
