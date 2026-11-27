@@ -18,7 +18,7 @@
   libxkbfile,
   ripgrep,
   cctools,
-  prefetch-npm-deps,
+  fetch-npm-deps-reentrant,
   parallel,
 }:
 let
@@ -122,8 +122,7 @@ stdenv.mkDerivation (
           inherit (finalAttrs) nativeBuildInputs;
           outputHashMode = "recursive";
           outputHashAlgo = "sha256";
-          # TODO: recompute for the per-lockfile cache directory layout.
-          outputHash = "sha256-vCIYwl6Y3qEu0ng3vLy34wgmTrYVL+NdQnI97zd1nmQ=";
+          outputHash = "sha256-VplV0b7QUVcr3MnnoPt+dktX5kTn/1OC1MoRAqBOSJA=";
           env = {
             FORCE_EMPTY_CACHE = true;
             FORCE_GIT_DEPS = true;
@@ -143,7 +142,7 @@ stdenv.mkDerivation (
             for p in $(find -name package-lock.json)
             do (
               echo "Prefetching $p"
-              ${prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out/$(dirname $p)"
+              ${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out"
             )
             done
           ''
@@ -152,9 +151,6 @@ stdenv.mkDerivation (
           # patched lockfiles too. The second pass writes into the same
           # per-lockfile cache directories as the first, so both sets of
           # tarballs end up in the cache that the offline `npm ci` reads.
-          # TODO: Currently, this is inefficient
-          # and will download dependencies multiple times.
-          # This will be solved by https://github.com/NixOS/nixpkgs/pull/545734
           + ''
             cp -R ${finalAttrs.src}/patches ./vscodium-patches
             cp -rp ${finalAttrs.src}/src/stable/. .
@@ -194,9 +190,10 @@ stdenv.mkDerivation (
             for p in $(find -name package-lock.json)
             do (
               echo "Prefetching patched $p"
-              ${prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out/$(dirname $p)"
+              ${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps "$p" "$out"
             )
             done
+            rm -f "$out/package-lock.json"
           ''
         );
 
@@ -217,7 +214,7 @@ stdenv.mkDerivation (
       #   $prefetchNpmDeps --fixup-lockfile package-lock.json || [ -n "$forceGitDeps" ]
       # during `npm ci`. Setting `prefetchNpmDeps` lets the fixup run for git deps,
       # and `forceGitDeps` makes the guard succeed even if it cannot (offline).
-      prefetchNpmDeps = "${prefetch-npm-deps}/bin/prefetch-npm-deps";
+      prefetchNpmDeps = "${fetch-npm-deps-reentrant.prefetch-npm-deps}/bin/prefetch-npm-deps";
       forceGitDeps = true;
     };
 
@@ -386,7 +383,7 @@ stdenv.mkDerivation (
           echo >&2 "File exists $p/node_modules"
           exit 0
         fi
-        npm ci --ignore-scripts --cache $TMPDIR/cache/$p
+        npm ci --ignore-scripts --cache $TMPDIR/cache
         if [ -e node_modules ]
         then
           patchShebangs node_modules
@@ -409,7 +406,7 @@ stdenv.mkDerivation (
           --include='build/package.json' \
           --include='build/package-lock.json' \
           ../patches/00-vsce-use-custom-lib.patch
-        ( cd build && npm ci --ignore-scripts --cache $TMPDIR/cache/build )
+        ( cd build && npm ci --ignore-scripts --cache $TMPDIR/cache )
         if [ -e build/node_modules ]
         then
           patchShebangs build/node_modules
